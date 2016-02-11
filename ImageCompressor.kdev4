@@ -1,0 +1,4 @@
+[Project]
+Name=ImageCompressor
+Manager=KDevCMakeManager
+VersionControl=kdevgit
