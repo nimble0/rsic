@@ -24,6 +24,7 @@ class ArithmeticEncoder
 	static const int               LAST_BYTE_SHIFT = std::numeric_limits<TRange>::digits-8;
 	static const TRange            RANGE_MAX = std::numeric_limits<TRange>::max();
 	std::pair<TRange, TRange>      range;
+	TRange                         rangeSize;
 
 	bool                           writeBuffered;
 	unsigned char                  bufferedEncodeByte;
@@ -36,6 +37,7 @@ public:
 		size_{0},
 		distribution(_distribution),
 		range{0, RANGE_MAX},
+		rangeSize{RANGE_MAX},
 		writeBuffered{false},
 		active{true}
 	{}
@@ -48,9 +50,9 @@ public:
 
 		std::pair<TRange, TRange> newRange = this->distribution.getRange(_v);
 
-		long long start = this->range.first
-			+ (this->range.second*static_cast<long long>(newRange.first))/RANGE_MAX;
-		TRange end = (this->range.second*static_cast<long long>(newRange.second))/RANGE_MAX;
+		unsigned long long start = this->range.first
+			+ (this->range.second*static_cast<unsigned long long>(newRange.first))/RANGE_MAX;
+		TRange end = (this->range.second*static_cast<unsigned long long>(newRange.second))/RANGE_MAX;
 
 		if(start > RANGE_MAX)
 		{
@@ -84,9 +86,7 @@ public:
 
 	void stopEncoding()
 	{
-		long long encode_ = static_cast<long long>(this->range.first)+this->range.second-1;
-
-		encode_ += 1<<LAST_BYTE_SHIFT;
+		long long encode_ = static_cast<unsigned long long>(this->range.first)+this->range.second-1;
 
 		if(encode_ > RANGE_MAX)
 		{
@@ -96,8 +96,6 @@ public:
 
 		TRange encode = encode_;
 
-		this->output.put(this->bufferedEncodeByte);
-		this->bufferedEncodeByte = encode>>LAST_BYTE_SHIFT;
 		this->output.put(this->bufferedEncodeByte);
 
 		this->active = false;

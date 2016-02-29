@@ -22,7 +22,7 @@ class ArithmeticDecoder
 
 	static const int               LAST_BYTE_SHIFT = std::numeric_limits<TRange>::digits-8;
 	static const TRange            RANGE_MAX = std::numeric_limits<TRange>::max();
-	std::pair<TRange, TRange>      range;
+	TRange                         rangeSize;
 
 	bool                           active;
 
@@ -33,7 +33,7 @@ public:
 		input(_input),
 		size_{_size},
 		distribution(_distribution),
-		range{0, RANGE_MAX},
+		rangeSize{RANGE_MAX},
 		active{true}
 	{}
 
@@ -55,27 +55,17 @@ public:
 	TEncode decode()
 	{
 		std::pair<TEncode, std::pair<TRange, TRange>> v =
-			this->distribution.getValue(
-				(static_cast<long long>(this->position-this->range.first)*RANGE_MAX)/this->range.second);
+			this->distribution.getValue((static_cast<unsigned long long>(this->position)*RANGE_MAX)/this->rangeSize);
 
 		TEncode decodedValue = v.first;
 		std::pair<TRange, TRange> newRange = v.second;
 
-		this->range =
+		this->position -= (static_cast<unsigned long long>(newRange.first) * this->rangeSize)/RANGE_MAX;
+		this->rangeSize = (static_cast<unsigned long long>(newRange.second) * this->rangeSize)/RANGE_MAX;
+
+		while(this->rangeSize <= RANGE_MAX>>8)
 		{
-			this->range.first
-			+ (static_cast<long long>(newRange.first) * this->range.second)/RANGE_MAX,
-			(static_cast<long long>(newRange.second) * this->range.second)/RANGE_MAX
-		};
-
-		if(this->range.second <= RANGE_MAX>>8)
-		{
-			TRange positionHighByte = this->position & (RANGE_MAX<<LAST_BYTE_SHIFT);
-
-			this->range.first -= positionHighByte;
-
-			this->range.first <<= 8;
-			this->range.second <<= 8;
+			this->rangeSize <<= 8;
 
 			unsigned char readByte;
 			this->input.get(reinterpret_cast<char&>(readByte));

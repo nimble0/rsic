@@ -19,8 +19,12 @@ find_package(ImageMagick COMPONENTS Magick++)
 find_package(Boost COMPONENTS system REQUIRED)
 
 include_directories(${ImageMagick_INCLUDE_DIRS})
-add_executable(imagecompressor ArithmeticEncoder.cpp Image.cpp main.cpp)
+add_executable(imagecompressor Image.cpp main.cpp)
 target_link_libraries(imagecompressor ${ImageMagick_LIBRARIES})
 target_link_libraries(imagecompressor ${Boost_LIBRARIES})
+
+add_executable(imagecompressor_test ArithmeticEncoder_tests.cpp Image.cpp main_test.cpp)
+target_link_libraries(imagecompressor_test ${ImageMagick_LIBRARIES})
+target_link_libraries(imagecompressor_test ${Boost_LIBRARIES})
 
 install(TARGETS imagecompressor RUNTIME DESTINATION bin)

@@ -8,6 +8,7 @@
 #include "RgbColour.hpp"
 #include "ArithmeticEncoder.hpp"
 #include "ArithmeticDecoder.hpp"
+#include "UniformDistribution.hpp"
 
 
 
@@ -38,23 +39,6 @@ std::pair<double,double> combineNormalDistributions(const std::vector<std::pair<
 	return combinedDist;
 }
 
-class FlatDistribution : public Distribution<unsigned char, unsigned int>
-{
-public:
-	std::pair<unsigned int, unsigned int>      getRange(unsigned char _v)
-	{
-		return {_v*256*256*256, 256*256*256-(_v==255?1:0)};
-	}
-	std::pair<
-		unsigned char,
-		std::pair<unsigned int, unsigned int>> getValue(unsigned int _v)
-	{
-		unsigned char value = _v/(256*256*256);
-
-		return {value, {value*256*256*256, 256*256*256-(_v==255?1:0)}};
-	}
-};
-
 
 int main(int argc, char **argv) {
 //     Image<RgbColour> image("soft-green.png");
@@ -80,13 +64,18 @@ int main(int argc, char **argv) {
 // 			<<std::endl;
 // 	}
 
-	std::vector<char> encodedData(10);
+	std::vector<unsigned char> values(1000);
+
+// 	for(auto& v : values)
+// 		v = rand
+
+	std::vector<char> encodedData(2048);
 	boost::iostreams::stream<boost::iostreams::basic_array_sink<char>>
 		outDataStream(encodedData.data(),encodedData.size());
 	boost::iostreams::stream<boost::iostreams::basic_array_source<char>>
 		inDataStream(encodedData.data(),encodedData.size());
 
-	FlatDistribution dist;
+	UniformDistribution dist;
 
 	ArithmeticEncoder<unsigned char, unsigned int> encoder(outDataStream, dist);
 	encoder.encode(4);
