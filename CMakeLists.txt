@@ -23,6 +23,7 @@ add_executable(imagecompressor
 	ArithmeticEncoder.cpp
 	ArithmeticDecoder.cpp
 	Image.cpp
+	
 	main.cpp
 )
 target_link_libraries(imagecompressor ${ImageMagick_LIBRARIES})
@@ -32,8 +33,9 @@ add_executable(imagecompressor_test
 	ArithmeticEncoder.cpp
 	ArithmeticDecoder.cpp
 	Image.cpp
-	ArithmeticEncoder_tests.cpp
-	main_test.cpp
+
+	test_ArithmeticEncoder.cpp
+	test_main.cpp
 )
 target_link_libraries(imagecompressor_test ${ImageMagick_LIBRARIES})
 target_link_libraries(imagecompressor_test ${Boost_LIBRARIES})
