@@ -10,7 +10,8 @@
 #include <random>
 #include <boost/iostreams/stream.hpp>
 
-#include "UniformDistribution.hpp"
+#include "UniformEncodingDistribution.hpp"
+#include "UniformDecodingDistribution.hpp"
 
 
 TEST_CASE( "Test arithmetic encoding and decoding", "[arithmetic_encoding_decoding]" )
@@ -21,9 +22,8 @@ TEST_CASE( "Test arithmetic encoding and decoding", "[arithmetic_encoding_decodi
 	boost::iostreams::stream<boost::iostreams::basic_array_source<char>>
 		inDataStream(encodedData.data(),encodedData.size());
 
-	UniformDistribution dist;
-
-	ArithmeticEncoder<unsigned char, unsigned int> encoder(outDataStream, dist);
+	ArithmeticEncoder encoder(outDataStream);
+	UniformEncodingDistribution encodeDist(encoder);
 
 	std::vector<unsigned char> values(1000);
 	std::default_random_engine generator;
@@ -32,17 +32,18 @@ TEST_CASE( "Test arithmetic encoding and decoding", "[arithmetic_encoding_decodi
 		v = distribution(generator);
 
 	for(auto v : values)
-		encoder.encode(v);
-	encoder.stopEncoding();
+		encodeDist.encode(v);
+	encoder.close();
 
 	outDataStream.close();
 
-	ArithmeticDecoder<unsigned char, unsigned int> decoder(inDataStream, dist, encoder.size());
-	decoder.startDecoding();
+	ArithmeticDecoder decoder(inDataStream, encoder.size());
+	UniformDecodingDistribution decodeDist(decoder);
+	decoder.open();
 
 	for(auto& v : values)
 	{
-		unsigned char decodedV = decoder.decode();
+		unsigned char decodedV = decodeDist.decode();
 
 		REQUIRE( static_cast<int>(decodedV) == static_cast<int>(v) );
 	}

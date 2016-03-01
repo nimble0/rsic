@@ -5,76 +5,49 @@
 #ifndef ARITHMETICDECODER_HPP
 #define ARITHMETICDECODER_HPP
 
-#include <ostream>
+#include <istream>
 #include <utility>
+#include <cstdint>
 #include <limits>
-#include <cassert>
-#include "Distribution.hpp"
 
 
-template <class TEncode, class TRange>
 class ArithmeticDecoder
 {
-	std::istream&                  input;
-	std::size_t                    size_;
+public:
+	typedef std::uint32_t Range;
+	typedef std::uint_fast64_t DoubleRange;
 
-	Distribution<TEncode, TRange>& distribution;
+private:
+	std::istream&                 input;
+	std::size_t                   size_;
 
-	static const int               LAST_BYTE_SHIFT = std::numeric_limits<TRange>::digits-8;
-	static const TRange            RANGE_MAX = std::numeric_limits<TRange>::max();
-	TRange                         rangeSize;
+	static const int              LAST_BYTE_SHIFT = std::numeric_limits<Range>::digits-8;
+	static const Range            RANGE_MAX = std::numeric_limits<Range>::max();
+	Range                         position;
+	Range                         rangeSize;
 
-	bool                           active;
+	bool                          active;
 
-	TRange                         position;
 
 public:
-	ArithmeticDecoder(std::istream& _input, Distribution<TEncode, TRange>& _distribution, std::size_t _size) :
+	ArithmeticDecoder(std::istream& _input, std::size_t _size) :
 		input(_input),
 		size_{_size},
-		distribution(_distribution),
+		position{0},
 		rangeSize{RANGE_MAX},
 		active{true}
 	{}
 
-	void startDecoding()
+	void open();
+
+	// Returns numerator where denominator is RANGE_MAX
+	// Fraction represents different values according to the distribution used
+	Range fraction()
 	{
-		this->position = 0;
-
-		assert(std::numeric_limits<TRange>::digits%8 == 0);
-
-		for(int i = 0; i < std::numeric_limits<TRange>::digits/8; ++i)
-		{
-			unsigned char readByte;
-			this->input.get(reinterpret_cast<char&>(readByte));
-
-			this->position = (this->position<<8) + readByte;
-		}
+		return (static_cast<DoubleRange>(this->position)*RANGE_MAX)/this->rangeSize;
 	}
 
-	TEncode decode()
-	{
-		std::pair<TEncode, std::pair<TRange, TRange>> v =
-			this->distribution.getValue((static_cast<unsigned long long>(this->position)*RANGE_MAX)/this->rangeSize);
-
-		TEncode decodedValue = v.first;
-		std::pair<TRange, TRange> newRange = v.second;
-
-		this->position -= (static_cast<unsigned long long>(newRange.first) * this->rangeSize)/RANGE_MAX;
-		this->rangeSize = (static_cast<unsigned long long>(newRange.second) * this->rangeSize)/RANGE_MAX;
-
-		while(this->rangeSize <= RANGE_MAX>>8)
-		{
-			this->rangeSize <<= 8;
-
-			unsigned char readByte;
-			this->input.get(reinterpret_cast<char&>(readByte));
-
-			this->position = (this->position<<8) + readByte;
-		}
-
-		return decodedValue;
-	}
+	void decode(std::pair<Range, Range> _range);
 };
 
 #endif // ARITHMETICDECODER_HPP

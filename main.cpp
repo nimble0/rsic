@@ -6,9 +6,6 @@
 
 #include "Image.hpp"
 #include "RgbColour.hpp"
-#include "ArithmeticEncoder.hpp"
-#include "ArithmeticDecoder.hpp"
-#include "UniformDistribution.hpp"
 
 
 
@@ -69,34 +66,34 @@ int main(int argc, char **argv) {
 // 	for(auto& v : values)
 // 		v = rand
 
-	std::vector<char> encodedData(2048);
-	boost::iostreams::stream<boost::iostreams::basic_array_sink<char>>
-		outDataStream(encodedData.data(),encodedData.size());
-	boost::iostreams::stream<boost::iostreams::basic_array_source<char>>
-		inDataStream(encodedData.data(),encodedData.size());
-
-	UniformDistribution dist;
-
-	ArithmeticEncoder<unsigned char, unsigned int> encoder(outDataStream, dist);
-	encoder.encode(4);
-	encoder.encode(45);
-	encoder.encode(34);
-	encoder.encode(95);
-	encoder.encode(25);
-	encoder.encode(185);
-	encoder.encode(72);
-	encoder.encode(32);
-	encoder.stopEncoding();
-
-	outDataStream.close();
-
-	for(char c : encodedData)
-		std::cout<<static_cast<int>(static_cast<unsigned char>(c))<<std::endl;
-
-	ArithmeticDecoder<unsigned char, unsigned int> decoder(inDataStream, dist, encoder.size());
-	decoder.startDecoding();
-	for(int i = 0; i < 8; ++i)
-		std::cout<<static_cast<int>(decoder.decode())<<std::endl;
+// 	std::vector<char> encodedData(2048);
+// 	boost::iostreams::stream<boost::iostreams::basic_array_sink<char>>
+// 		outDataStream(encodedData.data(),encodedData.size());
+// 	boost::iostreams::stream<boost::iostreams::basic_array_source<char>>
+// 		inDataStream(encodedData.data(),encodedData.size());
+//
+// 	UniformDistribution dist;
+//
+// 	ArithmeticEncoder<unsigned char, unsigned int> encoder(outDataStream, dist);
+// 	encoder.encode(4);
+// 	encoder.encode(45);
+// 	encoder.encode(34);
+// 	encoder.encode(95);
+// 	encoder.encode(25);
+// 	encoder.encode(185);
+// 	encoder.encode(72);
+// 	encoder.encode(32);
+// 	encoder.close();
+//
+// 	outDataStream.close();
+//
+// 	for(char c : encodedData)
+// 		std::cout<<static_cast<int>(static_cast<unsigned char>(c))<<std::endl;
+//
+// 	ArithmeticDecoder<unsigned char, unsigned int> decoder(inDataStream, dist, encoder.size());
+// 	decoder.open();
+// 	for(int i = 0; i < 8; ++i)
+// 		std::cout<<static_cast<int>(decoder.decode())<<std::endl;
 
 
     return 0;
