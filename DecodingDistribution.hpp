@@ -26,6 +26,9 @@ public:
 	{
 		std::pair<TEncode, std::pair<Range, Range>> v = this->getValue(this->decoder.fraction());
 
+		assert(this->decoder.fraction() >= v.second.first &&
+			this->decoder.fraction()-v.second.first < v.second.second);
+
 		this->decoder.decode(v.second);
 
 		return v.first;

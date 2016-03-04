@@ -17,12 +17,13 @@ public:
 	typedef std::uint32_t Range;
 	typedef std::uint_fast64_t DoubleRange;
 
+	static const Range            RANGE_MAX = std::numeric_limits<Range>::max();
+
 private:
 	std::ostream&                 output;
 	std::size_t                   size_;
 
 	static const int              LAST_BYTE_SHIFT = std::numeric_limits<Range>::digits-8;
-	static const Range            RANGE_MAX = std::numeric_limits<Range>::max();
 	std::pair<Range, Range>       range;
 
 	bool                          writeBuffered;
