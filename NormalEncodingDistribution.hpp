@@ -13,6 +13,9 @@
 
 class NormalEncodingDistribution : public EncodingDistribution<unsigned char>
 {
+	static const Range RANGE_RESERVED = 256*256;
+	static const Range VAR_RANGE_MAX = ArithmeticEncoder::RANGE_MAX - RANGE_RESERVED;
+
 	boost::math::normal dist;
 
 	double start, end;
@@ -24,8 +27,8 @@ public:
 
 		dist(_mu, _sigma),
 		start{boost::math::cdf(this->dist,0)},
-		end{1-boost::math::cdf(this->dist,256)},
-		scale{1-start-end}
+		end{boost::math::cdf(this->dist,256)},
+		scale{end-start}
 	{}
 
 	std::pair<Range, Range> getRange(unsigned char _v)
@@ -38,11 +41,20 @@ public:
 		cfStart /= this->scale;
 		cfSize /= this->scale;
 
-		return
+		std::pair<Range, Range> range
 		{
-			cfStart * ArithmeticEncoder::RANGE_MAX,
-			cfSize * ArithmeticEncoder::RANGE_MAX
+			cfStart * VAR_RANGE_MAX,
+			cfSize * VAR_RANGE_MAX
 		};
+
+		if(range.second < 256)
+			return
+			{
+				VAR_RANGE_MAX + 1 + _v*256,
+				256
+			};
+		else
+			return range;
 	}
 };
 

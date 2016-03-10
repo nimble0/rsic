@@ -13,13 +13,13 @@
 
 class NormalDecodingDistribution : public DecodingDistribution<unsigned char>
 {
+	static const Range RANGE_RESERVED = 256*256;
+	static const Range VAR_RANGE_MAX = ArithmeticDecoder::RANGE_MAX - RANGE_RESERVED;
+
 	boost::math::normal dist;
 
 	double start, end;
 	double scale;
-
-	static const Range RESERVED = 65536;
-	static const Range VAR_RANGE_SIZE = ArithmeticDecoder::RANGE_MAX - RESERVED;
 
 	std::pair<Range, Range> getRange(unsigned char _v)
 	{
@@ -33,8 +33,8 @@ class NormalDecodingDistribution : public DecodingDistribution<unsigned char>
 
 		return
 		{
-			cfStart * ArithmeticEncoder::RANGE_MAX,
-			cfSize * ArithmeticEncoder::RANGE_MAX
+			cfStart * VAR_RANGE_MAX,
+			cfSize * VAR_RANGE_MAX
 		};
 	}
 
@@ -44,18 +44,34 @@ public:
 
 		dist(_mu, _sigma),
 		start{boost::math::cdf(this->dist,0)},
-		end{1-boost::math::cdf(this->dist,256)},
-		scale{1-start-end}
+		end{boost::math::cdf(this->dist,256)},
+		scale{end-start}
 	{}
 
 	std::pair<
 		unsigned char,
 		std::pair<Range, Range>> getValue(Range _r)
 	{
-		unsigned char v = static_cast<unsigned char>(boost::math::quantile(this->dist,
-			this->start + ((static_cast<double>(_r)+1)/ArithmeticDecoder::RANGE_MAX)*this->scale));
+		if(_r <= VAR_RANGE_MAX)
+		{
+			unsigned char v = static_cast<unsigned char>(boost::math::quantile(this->dist,
+				this->start + ((static_cast<double>(_r)+1)/VAR_RANGE_MAX)*this->scale));
 
-		return { v, this->getRange(v) };
+			return { v, this->getRange(v) };
+		}
+		else
+		{
+			unsigned char v = ( _r - VAR_RANGE_MAX)/256;
+
+			return
+			{
+				v,
+				{
+					VAR_RANGE_MAX + 1 + v*256,
+					256
+				}
+			};
+		}
 	}
 };
 

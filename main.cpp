@@ -1,100 +1,22 @@
 #include <iostream>
-#include <utility>
-#include <limits>
-
 #include <boost/iostreams/stream.hpp>
-
 #include "Image.hpp"
 #include "RgbColour.hpp"
+#include "ImageCompressor.hpp"
 
 
-
-// o' = (o0*o1*o2)/(o0*o1 + o0*o2 + o1*o2)
-// u' = (u0*o1*o2 + u1*o0*o2 + u2*o0*o1)/(o0*o1 + o0*o2 + o1*o2)
-//    = o'*u0/o0 + o'*u1/o1 + o'*u2/o2;
-std::pair<double,double> combineNormalDistributions(const std::vector<std::pair<double,double>>& _dists)
+int main(int argc, char **argv)
 {
-	std::pair<double,double> combinedDist;
-
-	// a = o0*o1*o2*...*on
-	// b = a/o0 + a/o1 + a/o2 + ... + a/on
-
-	double a = 1;
-	for(auto dist : _dists)
-		a *= dist.second;
-
-	double b = 0;
-	for(auto dist : _dists)
-	{
-		combinedDist.first += dist.first*a/dist.second;
-		b += a/dist.second;
-	}
-
-	combinedDist.first /= b;
-	combinedDist.second = a/b;
-
-	return combinedDist;
-}
+	Image<RgbColour> image("soft-green2.png");
+	std::vector<char> encodedData(20480000);
+	boost::iostreams::stream<boost::iostreams::basic_array_sink<char>>
+		outputStream(encodedData.data(),encodedData.size());
+	std::streampos outputStreamStart = outputStream.tellp();
+	ImageCompressor imageCompressor(image, outputStream);
+	imageCompressor.compress();
 
 
-int main(int argc, char **argv) {
-//     Image<RgbColour> image("soft-green.png");
-//
-// 	std::vector<std::tuple<int,int,int>> totals(256);
-//
-// 	for(std::size_t y = 0; y < image.height(); ++y)
-// 		for(std::size_t x = 1; x < image.width(); ++x)
-// 		{
-// 			int p = image.get(x,y).r();
-// 			double pp = p*p;
-// 			++std::get<0>(totals[image.get(x-1,y).r()]);
-// 			std::get<1>(totals[image.get(x-1,y).r()]) += p;
-// 			std::get<2>(totals[image.get(x-1,y).r()]) += pp;
-// 		}
-//
-// 	for(auto& total : totals)
-// 	{
-// 		std::cout
-// 			<<std::get<0>(total)<<", "
-// 			<<std::get<1>(total)<<", "
-// 			<<std::get<2>(total)<<", "
-// 			<<std::endl;
-// 	}
-
-	std::vector<unsigned char> values(1000);
-
-// 	for(auto& v : values)
-// 		v = rand
-
-// 	std::vector<char> encodedData(2048);
-// 	boost::iostreams::stream<boost::iostreams::basic_array_sink<char>>
-// 		outDataStream(encodedData.data(),encodedData.size());
-// 	boost::iostreams::stream<boost::iostreams::basic_array_source<char>>
-// 		inDataStream(encodedData.data(),encodedData.size());
-//
-// 	UniformDistribution dist;
-//
-// 	ArithmeticEncoder<unsigned char, unsigned int> encoder(outDataStream, dist);
-// 	encoder.encode(4);
-// 	encoder.encode(45);
-// 	encoder.encode(34);
-// 	encoder.encode(95);
-// 	encoder.encode(25);
-// 	encoder.encode(185);
-// 	encoder.encode(72);
-// 	encoder.encode(32);
-// 	encoder.close();
-//
-// 	outDataStream.close();
-//
-// 	for(char c : encodedData)
-// 		std::cout<<static_cast<int>(static_cast<unsigned char>(c))<<std::endl;
-//
-// 	ArithmeticDecoder<unsigned char, unsigned int> decoder(inDataStream, dist, encoder.size());
-// 	decoder.open();
-// 	for(int i = 0; i < 8; ++i)
-// 		std::cout<<static_cast<int>(decoder.decode())<<std::endl;
-
+	std::cout<<(outputStream.tellp() - outputStreamStart)<<std::endl;
 
     return 0;
 }

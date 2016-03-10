@@ -23,7 +23,10 @@ add_executable(imagecompressor
 	ArithmeticEncoder.cpp
 	ArithmeticDecoder.cpp
 	Image.cpp
-	
+	MultiVarEncodingDistribution.cpp
+	ImageLayerCompressor.cpp
+	ImageCompressor.cpp
+
 	main.cpp
 )
 target_link_libraries(imagecompressor ${ImageMagick_LIBRARIES})
