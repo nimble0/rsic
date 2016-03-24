@@ -6,6 +6,7 @@
 
 #include "ArithmeticEncoder.hpp"
 #include "NormalEncodingDistribution.hpp"
+#include "LaplaceEncodingDistribution.hpp"
 
 
 // o' = (o0*o1*o2)/(o0*o1 + o0*o2 + o1*o2)
@@ -46,7 +47,7 @@ void MultiVarEncodingDistribution::encode(const std::vector<std::pair<double, do
 
 	if(combinedDist.second != 0)
 	{
-		NormalEncodingDistribution encodeDist(encoder, combinedDist.first, combinedDist.second);
+		LaplaceEncodingDistribution encodeDist(encoder, combinedDist.first, combinedDist.second);
 		encodeDist.encode(_v);
 	}
 }

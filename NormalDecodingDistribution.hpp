@@ -23,8 +23,8 @@ class NormalDecodingDistribution : public DecodingDistribution<unsigned char>
 
 	std::pair<Range, Range> getRange(unsigned char _v)
 	{
-		double cfStart = boost::math::cdf(this->dist, _v);
-		double cfSize = boost::math::cdf(this->dist, _v+1) - cfStart;
+		double cfStart = boost::math::cdf(this->dist, _v-0.5);
+		double cfSize = boost::math::cdf(this->dist, _v+0.5) - cfStart;
 
 		cfStart -= this->start;
 
@@ -43,8 +43,8 @@ public:
 		DecodingDistribution<unsigned char>(_decoder),
 
 		dist(_mu, _sigma),
-		start{boost::math::cdf(this->dist,0)},
-		end{boost::math::cdf(this->dist,256)},
+		start{boost::math::cdf(this->dist,-0.5)},
+		end{boost::math::cdf(this->dist,255.5)},
 		scale{end-start}
 	{}
 

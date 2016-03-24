@@ -11,6 +11,8 @@
 #include "RgbColour.hpp"
 #include "Image.hpp"
 
+#include <iostream>
+
 
 void ImageCompressor::compress()
 {
@@ -33,7 +35,12 @@ void ImageCompressor::compress()
 					start.second + layerSize,
 				};
 				ImageLayerCompressor layerCompressor(this->image, this->encoder, start, end, scale);
+
+
+				std::streampos preEncodeStreamPos = this->output.tellp();
 				layerCompressor.encode();
+
+				std::cout<<"layer size="<<(this->output.tellp()-preEncodeStreamPos)<<std::endl;
 			}
 	}
 

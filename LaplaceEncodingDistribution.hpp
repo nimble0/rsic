@@ -2,39 +2,49 @@
  * Copyright 2016 Erik Crevel <erik.crevel@ntlworld.com>
  */
 
-#ifndef NORMALENCODINGDISTRIBUTION_HPP
-#define NORMALENCODINGDISTRIBUTION_HPP
+#ifndef LAPLACEENCODINGDISTRIBUTION_HPP
+#define LAPLACEENCODINGDISTRIBUTION_HPP
 
 #include "EncodingDistribution.hpp"
 
 #include <cmath>
-#include <boost/math/distributions/normal.hpp>
+#include <boost/concept_check.hpp>
 
 
-class NormalEncodingDistribution : public EncodingDistribution<unsigned char>
+class LaplaceEncodingDistribution : public EncodingDistribution<unsigned char>
 {
 	static const Range RANGE_RESERVED = 256*256;
 	static const Range VAR_RANGE_MAX = ArithmeticEncoder::RANGE_MAX - RANGE_RESERVED;
 
-	boost::math::normal dist;
-
-	double start, end;
+	double mu;
+	double b;
+	double start;
+	double end;
 	double scale;
 
+	double cdf(double _x)
+	{
+		if(_x < this->mu)
+			return std::exp((_x-this->mu)/this->b)/2;
+		else
+			return 1-std::exp((this->mu-_x)/this->b)/2;
+	}
+
 public:
-    NormalEncodingDistribution(ArithmeticEncoder& _encoder, double _mu, double _sigma) :
+    LaplaceEncodingDistribution(ArithmeticEncoder& _encoder, double _mu, double _sigma) :
 		EncodingDistribution<unsigned char>(_encoder),
 
-		dist(_mu, _sigma),
-		start{boost::math::cdf(this->dist,-0.5)},
-		end{boost::math::cdf(this->dist,255.5)},
+		mu{_mu},
+		b{_sigma/std::sqrt(2)},
+		start{this->cdf(-0.5)},
+		end{this->cdf(255.5)},
 		scale{end-start}
 	{}
 
 	std::pair<Range, Range> getRange(unsigned char _v)
 	{
-		double cfStart = boost::math::cdf(this->dist, _v-0.5);
-		double cfSize = boost::math::cdf(this->dist, _v+0.5) - cfStart;
+		double cfStart = this->cdf(_v-0.5);
+		double cfSize = this->cdf(_v+0.5) - cfStart;
 
 		cfStart -= this->start;
 
@@ -58,4 +68,4 @@ public:
 	}
 };
 
-#endif // NORMALENCODINGDISTRIBUTION_HPP
+#endif // LAPLACEENCODINGDISTRIBUTION_HPP

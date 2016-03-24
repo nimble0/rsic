@@ -46,7 +46,10 @@ class ImageLayerCompressor
 	void encodePixel(
 		MultiVarEncodingDistribution& _dist,
 		const std::vector<std::pair<int, int>>& _vars,
-		std::pair<std::size_t, std::size_t> _i);
+		std::pair<std::size_t, std::size_t> _base,
+		std::pair<std::size_t, std::size_t> _offset);
+
+	void calcDists(MultiVarEncodingDistribution& _dist, std::pair<int, int> _encodeOffset, std::vector<std::pair<int, int>>& _offsets);
 
 public:
 	ImageLayerCompressor(
@@ -62,16 +65,19 @@ public:
 		end{_end},
 		scale{_scale},
 		halfScale{scale/2},
-		aDistVars{{-1,0}, {1,0}},
-		bDistVars{{0,-1}, {0,1}},
-		cDistVars{{-1,-1}, {-1,1}, {1,-1}, {1,1},},
+		aDistVars{
+			{0, 0},
+			{this->scale, 0}},
+		bDistVars{
+			{0, 0},
+			{0, this->scale}},
+		cDistVars{
+			{this->halfScale, 0},
+			{this->halfScale, this->scale}},
 		aDists(encoder),
 		bDists(encoder),
 		cDists(encoder)
 	{}
-
-	void calcDists(MultiVarEncodingDistribution& _dist, std::vector<std::pair<int, int>>& _offsets);
-
 	void encode();
 };
 
