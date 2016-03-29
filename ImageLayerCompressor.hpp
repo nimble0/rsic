@@ -33,6 +33,7 @@ class ImageLayerCompressor
 		aDistVars,
 		bDistVars,
 		cDistVars;
+
 	MultiVarEncodingDistribution
 		aDists,
 		bDists,

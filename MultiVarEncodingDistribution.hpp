@@ -16,10 +16,14 @@ class MultiVarEncodingDistribution
 {
 	ArithmeticEncoder& encoder;
 
-	std::vector<std::vector<std::pair<double, double>>> dists;
+	std::vector<std::vector<std::pair<int, double>>> varCurvePoints;
 
+
+	static double cubicInterpolate(double y0, double y1, double y2, double y3, double mu);
 
 	static std::pair<double,double> combineNormalDistributions(const std::vector<std::pair<double,double>>& _dists);
+
+	std::pair<double, double> varDist(int _var, unsigned char _val);
 
 	void encode(const std::vector<std::pair<double, double>>& _dists, unsigned char _v);
 
@@ -37,7 +41,7 @@ public:
 		for(const auto& var : _vars)
 		{
 			if(var.first)
-				combineDists.push_back(this->dists[i][var.second]);
+				combineDists.push_back(varDist(i, var.second));
 
 			++i;
 		}
