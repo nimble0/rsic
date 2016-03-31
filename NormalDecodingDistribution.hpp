@@ -55,7 +55,7 @@ public:
 		if(_r <= VAR_RANGE_MAX)
 		{
 			unsigned char v = static_cast<unsigned char>(boost::math::quantile(this->dist,
-				this->start + ((static_cast<double>(_r)+1)/VAR_RANGE_MAX)*this->scale));
+				this->start + ((static_cast<double>(_r)+1)/VAR_RANGE_MAX)*this->scale)+0.5);
 
 			return { v, this->getRange(v) };
 		}
