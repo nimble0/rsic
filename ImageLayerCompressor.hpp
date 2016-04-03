@@ -75,9 +75,9 @@ public:
 		cDistVars{
 			{this->halfScale, 0},
 			{this->halfScale, this->scale}},
-		aDists(encoder),
-		bDists(encoder),
-		cDists(encoder)
+		aDists(encoder, aDistVars.size()),
+		bDists(encoder, bDistVars.size()),
+		cDists(encoder, cDistVars.size())
 	{}
 	void encode();
 };

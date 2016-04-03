@@ -7,7 +7,7 @@
 
 #include <vector>
 #include <utility>
-#include <boost/iterator/iterator_concepts.hpp>
+#include "VarEncodingDistribution.hpp"
 
 class ArithmeticEncoder;
 
@@ -16,20 +16,17 @@ class MultiVarEncodingDistribution
 {
 	ArithmeticEncoder& encoder;
 
-	std::vector<std::vector<std::pair<int, double>>> varCurvePoints;
+	std::vector<VarEncodingDistribution> varDists;
 
-
-	static double cubicInterpolate(double y0, double y1, double y2, double y3, double mu);
 
 	static std::pair<double,double> combineNormalDistributions(const std::vector<std::pair<double,double>>& _dists);
-
-	std::pair<double, double> varDist(int _var, unsigned char _val);
 
 	void encode(const std::vector<std::pair<double, double>>& _dists, unsigned char _v);
 
 public:
-	MultiVarEncodingDistribution(ArithmeticEncoder& _encoder) :
-		encoder(_encoder)
+	MultiVarEncodingDistribution(ArithmeticEncoder& _encoder, std::size_t _nVars) :
+		encoder(_encoder),
+		varDists(_nVars, VarEncodingDistribution(encoder))
 	{}
 
 	template<class TContainer>
@@ -41,7 +38,7 @@ public:
 		for(const auto& var : _vars)
 		{
 			if(var.first)
-				combineDists.push_back(varDist(i, var.second));
+				combineDists.push_back(this->varDists[i].getDist(var.second));
 
 			++i;
 		}
@@ -49,22 +46,31 @@ public:
 		this->encode(combineDists, _v);
 	}
 
-
 	class Calculator
 	{
 		MultiVarEncodingDistribution& dist;
 
-		std::vector<std::vector<std::tuple<int,int,int>>> totals;
+		std::vector<VarEncodingDistribution::Calculator> distCalculators;
 
 	public:
-		Calculator(MultiVarEncodingDistribution& _dist, int _nVars) :
-			dist(_dist),
-			totals(_nVars, std::vector<std::tuple<int,int,int>>(256))
-		{}
+		Calculator(MultiVarEncodingDistribution& _dist) :
+			dist(_dist)
+		{
+			this->distCalculators.reserve(this->dist.varDists.size());
+			for(VarEncodingDistribution& _dist : this->dist.varDists)
+				this->distCalculators.emplace_back(_dist);
+		}
 
-		void add(int _var, int _varVal, unsigned char _v);
+		void add(int _var, int _varVal, unsigned char _v)
+		{
+			this->distCalculators[_var].add(_varVal, _v);
+		}
 
-		void calculate();
+		void calculate()
+		{
+			for(VarEncodingDistribution::Calculator& calculator : this->distCalculators)
+				calculator.calculate();
+		}
 	};
 };
 

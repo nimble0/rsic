@@ -7,7 +7,7 @@
 
 int main(int argc, char **argv)
 {
-	Image<RgbColour> image("soft-green2.png");
+	Image<RgbColour> image("soft-green2-opt.png");
 	std::vector<char> encodedData(20480000);
 	boost::iostreams::stream<boost::iostreams::basic_array_sink<char>>
 		outputStream(encodedData.data(),encodedData.size());
