@@ -14,23 +14,20 @@ class ArithmeticEncoder;
 
 class MultiVarEncodingDistribution
 {
-	ArithmeticEncoder& encoder;
-
 	std::vector<VarEncodingDistribution> varDists;
 
 
 	static std::pair<double,double> combineNormalDistributions(const std::vector<std::pair<double,double>>& _dists);
 
-	void encode(const std::vector<std::pair<double, double>>& _dists, unsigned char _v);
+	void encode(ArithmeticEncoder& _encoder, const std::vector<std::pair<double, double>>& _dists, unsigned char _v);
 
 public:
-	MultiVarEncodingDistribution(ArithmeticEncoder& _encoder, std::size_t _nVars) :
-		encoder(_encoder),
-		varDists(_nVars, VarEncodingDistribution(encoder))
+	MultiVarEncodingDistribution(std::size_t _nVars) :
+		varDists(_nVars)
 	{}
 
 	template<class TContainer>
-	void encode(const TContainer& _vars, unsigned char _v)
+	void encode(ArithmeticEncoder& _encoder, const TContainer& _vars, unsigned char _v)
 	{
 		std::vector<std::pair<double, double>> combineDists;
 
@@ -43,7 +40,7 @@ public:
 			++i;
 		}
 
-		this->encode(combineDists, _v);
+		this->encode(_encoder, combineDists, _v);
 	}
 
 	class Calculator

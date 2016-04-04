@@ -82,7 +82,7 @@ void ImageLayerCompressor::encodePixel(
 	};
 
 	if(this->image.check(encodeI))
-		_dist.encode(this->getVarValues(_vars, _base), this->image.get(encodeI).r());
+		_dist.encode(this->encoder, this->getVarValues(_vars, _base), this->image.get(encodeI).r());
 }
 
 void ImageLayerCompressor::encode()

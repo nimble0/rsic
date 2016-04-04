@@ -7,27 +7,38 @@
 
 #include <utility>
 #include "ArithmeticEncoder.hpp"
+#include "ArithmeticDecoder.hpp"
 
 
 template <class TEncode>
 class EncodingDistribution
 {
-	ArithmeticEncoder& encoder;
-
 public:
 	typedef ArithmeticEncoder::Range Range;
 	typedef ArithmeticEncoder::DoubleRange DoubleRange;
 
-	EncodingDistribution(ArithmeticEncoder& _encoder) :
-		encoder(_encoder)
-	{}
-
-	void encode(TEncode _v)
+	void encode(ArithmeticEncoder& _encoder, TEncode _v)
 	{
-		this->encoder.encode(this->getRange(_v));
+		_encoder.encode(this->getRange(_v));
+	}
+
+	TEncode decode(ArithmeticDecoder& _decoder)
+	{
+		std::pair<TEncode, std::pair<Range, Range>> v = this->getValue(_decoder.fraction());
+
+		assert(_decoder.fraction() >= v.second.first &&
+			_decoder.fraction()-v.second.first < v.second.second);
+
+		_decoder.decode(v.second);
+
+		return v.first;
 	}
 
 	virtual std::pair<Range, Range> getRange(TEncode _v)=0;
+
+	virtual std::pair<
+		TEncode,
+		std::pair<Range, Range>>    getValue(Range _v)=0;
 };
 
 #endif // ENCODINGDISTRIBUTION_HPP

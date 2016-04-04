@@ -17,6 +17,15 @@ public:
 	{
 		return {_v*256*256*256, 256*256*256-((_v==255)?1:0)};
 	}
+
+	std::pair<
+		unsigned char,
+		std::pair<Range, Range>> getValue(Range _v)
+	{
+		unsigned char value = _v/(256*256*256);
+
+		return {value, {value*256*256*256, 256*256*256-((value==255)?1:0)}};
+	}
 };
 
 #endif // UNIFORMENCODINGDISTRIBUTION_HPP

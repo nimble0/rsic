@@ -22,9 +22,7 @@ class NormalEncodingDistribution : public EncodingDistribution<unsigned char>
 	double scale;
 
 public:
-    NormalEncodingDistribution(ArithmeticEncoder& _encoder, double _mu, double _sigma) :
-		EncodingDistribution<unsigned char>(_encoder),
-
+    NormalEncodingDistribution(double _mu, double _sigma) :
 		dist(_mu, _sigma),
 		start{boost::math::cdf(this->dist,-0.5)},
 		end{boost::math::cdf(this->dist,255.5)},
@@ -55,6 +53,32 @@ public:
 			};
 		else
 			return range;
+	}
+
+	std::pair<
+		unsigned char,
+		std::pair<Range, Range>> getValue(Range _r)
+	{
+		if(_r <= VAR_RANGE_MAX)
+		{
+			unsigned char v = static_cast<unsigned char>(boost::math::quantile(this->dist,
+				this->start + ((static_cast<double>(_r)+1)/VAR_RANGE_MAX)*this->scale)+0.5);
+
+			return { v, this->getRange(v) };
+		}
+		else
+		{
+			unsigned char v = ( _r - VAR_RANGE_MAX)/256;
+
+			return
+			{
+				v,
+				{
+					VAR_RANGE_MAX + 1 + v*256,
+					256
+				}
+			};
+		}
 	}
 };
 

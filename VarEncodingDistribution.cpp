@@ -21,7 +21,7 @@ double VarEncodingDistribution::cubicInterpolate(double y0, double y1, double y2
    return(a0*mu*mu2+a1*mu2+a2*mu+a3);
 }
 
-std::pair<double, double> VarEncodingDistribution::getDist(unsigned char _val)
+std::pair<double, double> VarEncodingDistribution::getDist(unsigned char _val) const
 {
 	int i = 0;
 	for(; i < this->curvePoints.size() && this->curvePoints[i].first < _val; ++i);
@@ -36,12 +36,12 @@ std::pair<double, double> VarEncodingDistribution::getDist(unsigned char _val)
 	return {_val, cubicInterpolate(y0.second, y1.second, y2.second, y3.second, mu)};
 }
 
-void VarEncodingDistribution::encode(int _val, unsigned char _v)
+void VarEncodingDistribution::encode(ArithmeticEncoder& _encoder, int _val, unsigned char _v)
 {
 	std::pair<double, double> dist = this->getDist(_val);
 
-	LaplaceEncodingDistribution encodingDist(this->encoder, dist.first, dist.second);
-	encodingDist.encode(_v);
+	LaplaceEncodingDistribution encodingDist(dist.first, dist.second);
+	encodingDist.encode(_encoder, _v);
 }
 
 void VarEncodingDistribution::Calculator::add(int _val, unsigned char _v)

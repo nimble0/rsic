@@ -7,6 +7,7 @@
 
 #include "EncodingDistribution.hpp"
 
+#include <cassert>
 #include <cmath>
 #include <boost/concept_check.hpp>
 
@@ -22,7 +23,7 @@ class LaplaceEncodingDistribution : public EncodingDistribution<unsigned char>
 	double end;
 	double scale;
 
-	double cdf(double _x)
+	double cdf(double _x) const
 	{
 		if(_x < this->mu)
 			return std::exp((_x-this->mu)/this->b)/2;
@@ -30,10 +31,18 @@ class LaplaceEncodingDistribution : public EncodingDistribution<unsigned char>
 			return 1-std::exp((this->mu-_x)/this->b)/2;
 	}
 
-public:
-    LaplaceEncodingDistribution(ArithmeticEncoder& _encoder, double _mu, double _sigma) :
-		EncodingDistribution<unsigned char>(_encoder),
+	double inverseCdf(double _cdf) const
+	{
+		assert(_cdf >= 0 && _cdf <= 1);
 
+		if(_cdf <= 0.5)
+			return std::log(2*_cdf)*this->b + this->mu;
+		else
+			return this->mu - std::log(2 - 2*_cdf)*this->b;
+	}
+
+public:
+    LaplaceEncodingDistribution(double _mu, double _sigma) :
 		mu{_mu},
 		b{_sigma/std::sqrt(2)},
 		start{this->cdf(-0.5)},
@@ -65,6 +74,32 @@ public:
 			};
 		else
 			return range;
+	}
+
+	std::pair<
+		unsigned char,
+		std::pair<Range, Range>> getValue(Range _r)
+	{
+		if(_r <= VAR_RANGE_MAX)
+		{
+			unsigned char v = static_cast<unsigned char>(this->inverseCdf(
+				this->start + ((static_cast<double>(_r)+1)/VAR_RANGE_MAX)*this->scale)+0.5);
+
+			return { v, this->getRange(v) };
+		}
+		else
+		{
+			unsigned char v = ( _r - VAR_RANGE_MAX)/256;
+
+			return
+			{
+				v,
+				{
+					VAR_RANGE_MAX + 1 + v*256,
+					256
+				}
+			};
+		}
 	}
 };
 

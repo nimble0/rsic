@@ -8,14 +8,13 @@
 #include <vector>
 #include <tuple>
 #include <utility>
+#include <ostream>
 
 class ArithmeticEncoder;
 
 
 class VarEncodingDistribution
 {
-	ArithmeticEncoder& encoder;
-
 	std::vector<std::pair<int, double>> curvePoints;
 
 
@@ -23,13 +22,9 @@ class VarEncodingDistribution
 
 
 public:
-	VarEncodingDistribution(ArithmeticEncoder& _encoder) :
-		encoder(_encoder)
-	{}
+	std::pair<double, double> getDist(unsigned char _val) const;
 
-	std::pair<double, double> getDist(unsigned char _val);
-
-	void encode(int _val, unsigned char _v);
+	void encode(ArithmeticEncoder& _encoder, int _val, unsigned char _v);
 
 	class Calculator
 	{
