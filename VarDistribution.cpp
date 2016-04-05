@@ -2,13 +2,14 @@
  * Copyright 2016 Erik Crevel <erik.crevel@ntlworld.com>
  */
 
-#include "VarEncodingDistribution.hpp"
+#include "VarDistribution.hpp"
 
 #include "ArithmeticEncoder.hpp"
+#include "ArithmeticDecoder.hpp"
 #include "LaplaceEncodingDistribution.hpp"
 
 
-double VarEncodingDistribution::cubicInterpolate(double y0, double y1, double y2, double y3, double mu)
+double VarDistribution::cubicInterpolate(double y0, double y1, double y2, double y3, double mu)
 {
    double a0,a1,a2,a3,mu2;
 
@@ -21,7 +22,7 @@ double VarEncodingDistribution::cubicInterpolate(double y0, double y1, double y2
    return(a0*mu*mu2+a1*mu2+a2*mu+a3);
 }
 
-std::pair<double, double> VarEncodingDistribution::getDist(unsigned char _val) const
+std::pair<double, double> VarDistribution::getDist(unsigned char _val) const
 {
 	int i = 0;
 	for(; i < this->curvePoints.size() && this->curvePoints[i].first < _val; ++i);
@@ -36,15 +37,7 @@ std::pair<double, double> VarEncodingDistribution::getDist(unsigned char _val) c
 	return {_val, cubicInterpolate(y0.second, y1.second, y2.second, y3.second, mu)};
 }
 
-void VarEncodingDistribution::encode(ArithmeticEncoder& _encoder, int _val, unsigned char _v)
-{
-	std::pair<double, double> dist = this->getDist(_val);
-
-	LaplaceEncodingDistribution encodingDist(dist.first, dist.second);
-	encodingDist.encode(_encoder, _v);
-}
-
-void VarEncodingDistribution::Calculator::add(int _val, unsigned char _v)
+void VarDistribution::Calculator::add(int _val, unsigned char _v)
 {
 	int p = _v;
 	int pp = p*p;
@@ -55,7 +48,7 @@ void VarEncodingDistribution::Calculator::add(int _val, unsigned char _v)
 	std::get<2>(varTotals) += pp;
 }
 
-void VarEncodingDistribution::Calculator::calculate()
+void VarDistribution::Calculator::calculate()
 {
 	const int CURVE_SEGMENT_SIZE = 256;
 

@@ -23,7 +23,7 @@ add_executable(imagecompressor
 	ArithmeticEncoder.cpp
 	ArithmeticDecoder.cpp
 	Image.cpp
-	VarEncodingDistribution.cpp
+	VarDistribution.cpp
 	MultiVarEncodingDistribution.cpp
 	ImageLayerCompressor.cpp
 	ImageCompressor.cpp

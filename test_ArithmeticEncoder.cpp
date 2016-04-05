@@ -12,6 +12,7 @@
 
 #include "UniformEncodingDistribution.hpp"
 #include "NormalEncodingDistribution.hpp"
+#include "LaplaceEncodingDistribution.hpp"
 
 
 TEST_CASE( "Test arithmetic encoding and decoding", "[arithmetic_encoding_decoding]" )
@@ -77,6 +78,13 @@ void testDistribution(EncodingDistribution<TEncode>& _encodeDist)
 TEST_CASE( "Test normal distribution", "[normal_distribution]" )
 {
 	NormalEncodingDistribution encodeDist(100, 100);
+
+	testDistribution(encodeDist);
+}
+
+TEST_CASE( "Test laplace distribution", "[laplace_distribution]" )
+{
+	LaplaceEncodingDistribution encodeDist(100, 100);
 
 	testDistribution(encodeDist);
 }

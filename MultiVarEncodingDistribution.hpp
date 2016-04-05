@@ -7,19 +7,18 @@
 
 #include <vector>
 #include <utility>
-#include "VarEncodingDistribution.hpp"
+#include "VarDistribution.hpp"
+#include "LaplaceEncodingDistribution.hpp"
 
 class ArithmeticEncoder;
 
 
 class MultiVarEncodingDistribution
 {
-	std::vector<VarEncodingDistribution> varDists;
+	std::vector<VarDistribution> varDists;
 
 
 	static std::pair<double,double> combineNormalDistributions(const std::vector<std::pair<double,double>>& _dists);
-
-	void encode(ArithmeticEncoder& _encoder, const std::vector<std::pair<double, double>>& _dists, unsigned char _v);
 
 public:
 	MultiVarEncodingDistribution(std::size_t _nVars) :
@@ -40,21 +39,54 @@ public:
 			++i;
 		}
 
-		this->encode(_encoder, combineDists, _v);
+
+		std::pair<double, double> combinedDist = combineNormalDistributions(combineDists);
+
+		if(combinedDist.second != 0)
+		{
+			LaplaceEncodingDistribution encodeDist(combinedDist.first, combinedDist.second);
+			encodeDist.encode(_encoder, _v);
+		}
+	}
+
+	template<class TContainer>
+	void decode(ArithmeticDecoder& _decoder, const TContainer& _vars)
+	{
+		std::vector<std::pair<double, double>> combineDists;
+
+		std::size_t i = 0;
+		for(const auto& var : _vars)
+		{
+			if(var.first)
+				combineDists.push_back(this->varDists[i].getDist(var.second));
+
+			++i;
+		}
+
+
+		std::pair<double, double> combinedDist = combineNormalDistributions(combineDists);
+
+		if(combinedDist.second != 0)
+		{
+			LaplaceEncodingDistribution encodeDist(combinedDist.first, combinedDist.second);
+			return encodeDist.decode(_decoder);
+		}
+		else
+			return combinedDist.first;
 	}
 
 	class Calculator
 	{
 		MultiVarEncodingDistribution& dist;
 
-		std::vector<VarEncodingDistribution::Calculator> distCalculators;
+		std::vector<VarDistribution::Calculator> distCalculators;
 
 	public:
 		Calculator(MultiVarEncodingDistribution& _dist) :
 			dist(_dist)
 		{
 			this->distCalculators.reserve(this->dist.varDists.size());
-			for(VarEncodingDistribution& _dist : this->dist.varDists)
+			for(VarDistribution& _dist : this->dist.varDists)
 				this->distCalculators.emplace_back(_dist);
 		}
 
@@ -65,7 +97,7 @@ public:
 
 		void calculate()
 		{
-			for(VarEncodingDistribution::Calculator& calculator : this->distCalculators)
+			for(VarDistribution::Calculator& calculator : this->distCalculators)
 				calculator.calculate();
 		}
 	};

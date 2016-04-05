@@ -2,8 +2,8 @@
  * Copyright 2016 Erik Crevel <erik.crevel@ntlworld.com>
  */
 
-#ifndef VARENCODINGDISTRIBUTION_HPP
-#define VARENCODINGDISTRIBUTION_HPP
+#ifndef VARDISTRIBUTION_HPP
+#define VARDISTRIBUTION_HPP
 
 #include <vector>
 #include <tuple>
@@ -11,9 +11,10 @@
 #include <ostream>
 
 class ArithmeticEncoder;
+class ArithmeticDecoder;
 
 
-class VarEncodingDistribution
+class VarDistribution
 {
 	std::vector<std::pair<int, double>> curvePoints;
 
@@ -24,16 +25,14 @@ class VarEncodingDistribution
 public:
 	std::pair<double, double> getDist(unsigned char _val) const;
 
-	void encode(ArithmeticEncoder& _encoder, int _val, unsigned char _v);
-
 	class Calculator
 	{
-		VarEncodingDistribution& dist;
+		VarDistribution& dist;
 
 		std::vector<std::tuple<int, int, int>> totals;
 
 	public:
-		Calculator(VarEncodingDistribution& _dist) :
+		Calculator(VarDistribution& _dist) :
 			dist(_dist),
 			totals(256)
 		{}
@@ -44,4 +43,4 @@ public:
 	};
 };
 
-#endif // VARENCODINGDISTRIBUTION_HPP
+#endif // VARDISTRIBUTION_HPP

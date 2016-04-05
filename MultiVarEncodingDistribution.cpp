@@ -40,14 +40,3 @@ std::pair<double,double> MultiVarEncodingDistribution::combineNormalDistribution
 
 	return combinedDist;
 }
-
-void MultiVarEncodingDistribution::encode(ArithmeticEncoder& _encoder, const std::vector<std::pair<double, double>>& _dists, unsigned char _v)
-{
-	std::pair<double, double> combinedDist = combineNormalDistributions(_dists);
-
-	if(combinedDist.second != 0)
-	{
-		LaplaceEncodingDistribution encodeDist(combinedDist.first, combinedDist.second);
-		encodeDist.encode(_encoder, _v);
-	}
-}
