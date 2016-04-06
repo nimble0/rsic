@@ -25,6 +25,9 @@ class VarDistribution
 public:
 	std::pair<double, double> getDist(unsigned char _val) const;
 
+	void encodeDist(std::ostream& _out) const;
+	void decodeDist(std::istream& _in);
+
 	class Calculator
 	{
 		VarDistribution& dist;

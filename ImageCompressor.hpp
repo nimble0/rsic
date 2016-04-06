@@ -5,7 +5,7 @@
 #ifndef IMAGECOMPRESSOR_HPP
 #define IMAGECOMPRESSOR_HPP
 
-#include <ostream>
+#include <iostream>
 #include "ArithmeticEncoder.hpp"
 
 class RgbColour;
@@ -17,20 +17,13 @@ class ImageCompressor
 {
 	Image<RgbColour>& image;
 
-	ArithmeticEncoder encoder;
-	std::ostream& output;
-
-
-	void compressArea(int scale, std::pair<std::size_t, std::size_t> _start, std::pair<std::size_t, std::size_t> _end);
-
 public:
-	ImageCompressor(Image<RgbColour>& _image, std::ostream& _output) :
-		image(_image),
-		encoder(_output),
-		output(_output)
+	ImageCompressor(Image<RgbColour>& _image) :
+		image(_image)
 	{}
 
-	void compress();
+	void compress(std::ostream& _output) const;
+	void decompress(std::istream& _input);
 };
 
 #endif // IMAGECOMPRESSOR_HPP

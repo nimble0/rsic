@@ -50,7 +50,7 @@ public:
 	}
 
 	template<class TContainer>
-	void decode(ArithmeticDecoder& _decoder, const TContainer& _vars)
+	unsigned char decode(ArithmeticDecoder& _decoder, const TContainer& _vars)
 	{
 		std::vector<std::pair<double, double>> combineDists;
 
@@ -73,6 +73,18 @@ public:
 		}
 		else
 			return combinedDist.first;
+	}
+
+	void encodeDist(std::ostream& _out) const
+	{
+		for(const VarDistribution& dist : this->varDists)
+			dist.encodeDist(_out);
+	}
+
+	void decodeDist(std::istream& _in)
+	{
+		for(VarDistribution& dist : this->varDists)
+			dist.decodeDist(_in);
 	}
 
 	class Calculator

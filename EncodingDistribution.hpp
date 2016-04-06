@@ -5,6 +5,7 @@
 #ifndef ENCODINGDISTRIBUTION_HPP
 #define ENCODINGDISTRIBUTION_HPP
 
+#include <cassert>
 #include <utility>
 #include "ArithmeticEncoder.hpp"
 #include "ArithmeticDecoder.hpp"

@@ -37,6 +37,31 @@ std::pair<double, double> VarDistribution::getDist(unsigned char _val) const
 	return {_val, cubicInterpolate(y0.second, y1.second, y2.second, y3.second, mu)};
 }
 
+void VarDistribution::encodeDist(std::ostream& _out) const
+{
+	unsigned char nCurvePoints = this->curvePoints.size();
+	_out.write(reinterpret_cast<char*>(&nCurvePoints), sizeof(nCurvePoints));
+
+	for(std::pair<int, double> curvePoint : this->curvePoints)
+	{
+		_out.write(reinterpret_cast<char*>(&curvePoint.first), sizeof(curvePoint.first));
+		_out.write(reinterpret_cast<char*>(&curvePoint.second), sizeof(curvePoint.second));
+	}
+}
+
+void VarDistribution::decodeDist(std::istream& _in)
+{
+	unsigned char nCurvePoints;
+	_in.read(reinterpret_cast<char*>(&nCurvePoints), sizeof(nCurvePoints));
+
+	this->curvePoints.resize(nCurvePoints);
+	for(std::pair<int, double>& curvePoint : this->curvePoints)
+	{
+		_in.read(reinterpret_cast<char*>(&curvePoint.first), sizeof(curvePoint.first));
+		_in.read(reinterpret_cast<char*>(&curvePoint.second), sizeof(curvePoint.second));
+	}
+}
+
 void VarDistribution::Calculator::add(int _val, unsigned char _v)
 {
 	int p = _v;
@@ -50,7 +75,7 @@ void VarDistribution::Calculator::add(int _val, unsigned char _v)
 
 void VarDistribution::Calculator::calculate()
 {
-	const int CURVE_SEGMENT_SIZE = 256;
+	const int CURVE_SEGMENT_SIZE = 4096;
 
 	this->dist.curvePoints.emplace_back();
 

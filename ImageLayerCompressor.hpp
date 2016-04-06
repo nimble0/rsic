@@ -19,9 +19,7 @@ class ArithmeticEncoder;
 
 class ImageLayerCompressor
 {
-	const Image<RgbColour>& image;
-
-	ArithmeticEncoder& encoder;
+	Image<RgbColour>& image;
 
 	std::pair<std::size_t, std::size_t> start;
 	std::pair<std::size_t, std::size_t> end;
@@ -45,6 +43,14 @@ class ImageLayerCompressor
 		std::pair<std::size_t, std::size_t> _i);
 
 	void encodePixel(
+		ArithmeticEncoder& _encoder,
+		MultiVarEncodingDistribution& _dist,
+		const std::vector<std::pair<int, int>>& _vars,
+		std::pair<std::size_t, std::size_t> _base,
+		std::pair<std::size_t, std::size_t> _offset);
+
+	void decodePixel(
+		ArithmeticDecoder& _decoder,
 		MultiVarEncodingDistribution& _dist,
 		const std::vector<std::pair<int, int>>& _vars,
 		std::pair<std::size_t, std::size_t> _base,
@@ -54,14 +60,12 @@ class ImageLayerCompressor
 
 public:
 	ImageLayerCompressor(
-		const Image<RgbColour>& _image,
-		ArithmeticEncoder& _encoder,
+		Image<RgbColour>& _image,
 		std::pair<std::size_t, std::size_t> _start,
 		std::pair<std::size_t, std::size_t> _end,
 		int _scale
 	) :
 		image(_image),
-		encoder(_encoder),
 		start{_start},
 		end{_end},
 		scale{_scale},
@@ -79,7 +83,11 @@ public:
 		bDists(bDistVars.size()),
 		cDists(cDistVars.size())
 	{}
-	void encode();
+
+	std::size_t pixelCount() const;
+
+	void compress(std::ostream& _output);
+	void decompress(std::istream& _input);
 };
 
 #endif // IMAGELAYERCOMPRESSOR_HPP

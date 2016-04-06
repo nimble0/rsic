@@ -79,6 +79,20 @@ public:
 	{
 		return this->check(_i.first, _i.second);
 	}
+
+	void resize(std::size_t _width, std::size_t _height)
+	{
+		std::vector<TColour> newPixels(_width*_height);
+
+		std::size_t copyWidth = std::min(this->width_, _width);
+
+		for(std::size_t y = 0; y < _height; ++y)
+			std::copy(&this->pixels[y * this->width_], &this->pixels[y * this->width_ + copyWidth], &newPixels[y * _width]);
+			
+		this->width_ = _width;
+		this->height_ = _height;
+		this->pixels.swap(newPixels);
+	}
 };
 
 #endif // IMAGE_HPP

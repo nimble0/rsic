@@ -1,5 +1,5 @@
 #include <iostream>
-#include <boost/iostreams/stream.hpp>
+#include <fstream>
 #include "Image.hpp"
 #include "RgbColour.hpp"
 #include "ImageCompressor.hpp"
@@ -7,16 +7,21 @@
 
 int main(int argc, char **argv)
 {
-	Image<RgbColour> image("soft-green2-opt.png");
-	std::vector<char> encodedData(20480000);
-	boost::iostreams::stream<boost::iostreams::basic_array_sink<char>>
-		outputStream(encodedData.data(),encodedData.size());
-	std::streampos outputStreamStart = outputStream.tellp();
-	ImageCompressor imageCompressor(image, outputStream);
-	imageCompressor.compress();
+	if(argc == 3)
+	{
+		std::string inPath(argv[1]);
+		std::string outPath(argv[2]);
 
+		Image<RgbColour> image(inPath);
+		ImageCompressor imageCompressor(image);
 
-	std::cout<<(outputStream.tellp() - outputStreamStart)<<std::endl;
+		std::ofstream output;
+		output.open(outPath);
+		imageCompressor.compress(output);
+		output.close();
+	}
+	else
+		std::cout<<"Invalid number of arguments"<<std::endl;
 
     return 0;
 }
