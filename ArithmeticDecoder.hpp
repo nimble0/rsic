@@ -6,36 +6,27 @@
 #define ARITHMETICDECODER_HPP
 
 #include <istream>
-#include <utility>
-#include <cstdint>
-#include <limits>
+
+#include "ArithmeticEncoder.hpp"
 
 
 class ArithmeticDecoder
 {
-public:
-	typedef std::uint32_t Range;
-	typedef std::uint_fast64_t DoubleRange;
+	std::istream&                  input;
 
-	static const Range            RANGE_MAX = std::numeric_limits<Range>::max();
+	ArithmeticEncoder::Range       position;
+	ArithmeticEncoder::DoubleRange rangeSize;
 
-private:
-	std::istream&                 input;
-	std::size_t                   size_;
+	bool                           active;
 
-	static const int              LAST_BYTE_SHIFT = std::numeric_limits<Range>::digits-8;
-	Range                         position;
-	Range                         rangeSize;
 
-	bool                          active;
-
+	void                           scaleRange();
 
 public:
-	ArithmeticDecoder(std::istream& _input, std::size_t _size) :
+	ArithmeticDecoder(std::istream& _input) :
 		input(_input),
-		size_{_size},
 		position{0},
-		rangeSize{RANGE_MAX},
+		rangeSize{ArithmeticEncoder::RANGE_MAX},
 		active{true}
 	{}
 
@@ -43,12 +34,9 @@ public:
 
 	// Returns numerator where denominator is RANGE_MAX
 	// Fraction represents different values according to the distribution used
-	Range fraction()
-	{
-		return (static_cast<DoubleRange>(this->position)*RANGE_MAX)/this->rangeSize;
-	}
+	ArithmeticEncoder::Range fraction();
 
-	void decode(std::pair<Range, Range> _range);
+	void decode(std::pair<ArithmeticEncoder::Range, ArithmeticEncoder::DoubleRange> _range);
 };
 
 #endif // ARITHMETICDECODER_HPP

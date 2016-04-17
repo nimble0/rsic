@@ -15,21 +15,50 @@
 #include "LaplaceEncodingDistribution.hpp"
 
 
-TEST_CASE( "Test arithmetic encoding and decoding", "[arithmetic_encoding_decoding]" )
+// This tests the boundries between values
+template <class TEncode>
+void testDistribution(EncodingDistribution<TEncode>& _encodeDist)
 {
-	UniformEncodingDistribution encodeDist;
+	for(int v = 0; v < 256; ++v)
+	{
+		std::pair<ArithmeticEncoder::Range, ArithmeticEncoder::DoubleRange>
+			range = _encodeDist.getRange(v);
 
-	std::vector<char> encodedData(2048);
+		std::pair<TEncode, std::pair<ArithmeticEncoder::Range, ArithmeticEncoder::DoubleRange>>
+			v2_ = _encodeDist.getValue(range.first);
+
+		CHECK( v == (int)v2_.first );
+		CHECK( range.first == v2_.second.first );
+		CHECK( range.second == v2_.second.second );
+
+		v2_ = _encodeDist.getValue(range.second-1);
+
+		CHECK( v == (int)v2_.first );
+		CHECK( range.first == v2_.second.first );
+		CHECK( range.second == v2_.second.second );
+	}
+}
+
+void testEncoding(int _seed)
+{
+	std::default_random_engine generator;
+	generator.seed(_seed);
+	std::uniform_int_distribution<int> distribution(0,255);
+
+
+	NormalEncodingDistribution encodeDist(distribution(generator), distribution(generator)+1);
+
+	testDistribution(encodeDist);
+
+	std::vector<char> encodedData(1000);
+
 	boost::iostreams::stream<boost::iostreams::basic_array_sink<char>>
 		outDataStream(encodedData.data(),encodedData.size());
-	boost::iostreams::stream<boost::iostreams::basic_array_source<char>>
-		inDataStream(encodedData.data(),encodedData.size());
+	auto streamStart = outDataStream.tellp();
 
 	ArithmeticEncoder encoder(outDataStream);
 
-	std::vector<unsigned char> values(1000);
-	std::default_random_engine generator;
-	std::uniform_int_distribution<int> distribution(0,255);
+	std::vector<unsigned char> values(100);
 	for(auto& v : values)
 		v = distribution(generator);
 
@@ -37,9 +66,15 @@ TEST_CASE( "Test arithmetic encoding and decoding", "[arithmetic_encoding_decodi
 		encodeDist.encode(encoder, v);
 	encoder.close();
 
+	std::size_t writeSize = outDataStream.tellp() - streamStart;
+
 	outDataStream.close();
 
-	ArithmeticDecoder decoder(inDataStream, encoder.size());
+	boost::iostreams::stream<boost::iostreams::basic_array_source<char>>
+		inDataStream(encodedData.data(),encodedData.size());
+	streamStart = inDataStream.tellg();
+
+	ArithmeticDecoder decoder(inDataStream);
 	decoder.open();
 
 	for(auto& v : values)
@@ -48,31 +83,15 @@ TEST_CASE( "Test arithmetic encoding and decoding", "[arithmetic_encoding_decodi
 
 		REQUIRE( static_cast<int>(decodedV) == static_cast<int>(v) );
 	}
+
+	std::size_t readSize = inDataStream.tellg() - streamStart;
+	REQUIRE( readSize == writeSize );
 }
 
-
-// This tests the boundries between values
-template <class TEncode>
-void testDistribution(EncodingDistribution<TEncode>& _encodeDist)
+TEST_CASE( "Test arithmetic encoding and decoding", "[arithmetic_encoding_decoding]" )
 {
-	for(int v = 0; v < 256; ++v)
-	{
-		std::pair<ArithmeticEncoder::Range, ArithmeticEncoder::Range>
-			range = _encodeDist.getRange(v);
-
-		std::pair<TEncode, std::pair<ArithmeticEncoder::Range, ArithmeticEncoder::Range>>
-			v2_ = _encodeDist.getValue(range.first);
-
-		CHECK( v == (int)v2_.first);
-		CHECK( range.first == v2_.second.first );
-		CHECK( range.second == v2_.second.second );
-
-		v2_ = _encodeDist.getValue(v2_.second.first+range.second-1);
-
-		CHECK( v == (int)v2_.first);
-		CHECK( range.first == v2_.second.first );
-		CHECK( range.second == v2_.second.second );
-	}
+	for(int seed = 0; seed < 1000; ++seed)
+		testEncoding(seed);
 }
 
 TEST_CASE( "Test normal distribution", "[normal_distribution]" )

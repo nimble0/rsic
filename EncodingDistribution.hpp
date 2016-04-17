@@ -20,26 +20,33 @@ public:
 
 	void encode(ArithmeticEncoder& _encoder, TEncode _v)
 	{
-		_encoder.encode(this->getRange(_v));
+		std::pair<Range, DoubleRange> range = this->getRange(_v);
+
+		assert(this->getValue(range.first) == std::make_pair(_v, range));
+		assert(this->getValue(range.second - 1) == std::make_pair(_v, range));
+
+		_encoder.encode(range);
 	}
 
 	TEncode decode(ArithmeticDecoder& _decoder)
 	{
-		std::pair<TEncode, std::pair<Range, Range>> v = this->getValue(_decoder.fraction());
+		auto fraction = _decoder.fraction();
 
-		assert(_decoder.fraction() >= v.second.first &&
-			_decoder.fraction()-v.second.first < v.second.second);
+		std::pair<TEncode, std::pair<Range, DoubleRange>> v = this->getValue(fraction);
+
+		assert(fraction >= v.second.first &&
+			fraction < v.second.second);
 
 		_decoder.decode(v.second);
 
 		return v.first;
 	}
 
-	virtual std::pair<Range, Range> getRange(TEncode _v)=0;
+	virtual std::pair<Range, DoubleRange> getRange(TEncode _v)=0;
 
 	virtual std::pair<
 		TEncode,
-		std::pair<Range, Range>>    getValue(Range _v)=0;
+		std::pair<Range, DoubleRange>>    getValue(Range _v)=0;
 };
 
 #endif // ENCODINGDISTRIBUTION_HPP

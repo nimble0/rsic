@@ -22,10 +22,20 @@ void ImageCompressor::compress(std::ostream& _output) const
 	_output.write(reinterpret_cast<char*>(&width), sizeof(width));
 	_output.write(reinterpret_cast<char*>(&height), sizeof(height));
 
+	int skipLayers = 3;
 	int divisionSize = 64;
+
 	int layers = std::ceil(std::log2(std::max(this->image.width()-1, this->image.height()-1)));
 
-	for(int layer = layers - 3; layer > 0; --layer)
+	int scale = 1 << (layers - skipLayers);
+	for(std::size_t y = 0; y < this->image.height(); y += scale)
+		for(std::size_t x = 0; x < this->image.width(); x += scale)
+		{
+			unsigned char rawColour = this->image.get(x,y).r();
+			_output.write(reinterpret_cast<char*>(&rawColour), sizeof(rawColour));
+		}
+
+	for(int layer = layers - skipLayers; layer > 0; --layer)
 	{
 		int scale = 1 << layer;
 		int divisions = std::max((layers-layer)-divisionSize, 0);
@@ -61,8 +71,20 @@ void ImageCompressor::decompress(std::istream& _input)
 
 	this->image.resize(width, height);
 
+	int skipLayers = 3;
 	int divisionSize = 64;
+
 	int layers = std::ceil(std::log2(std::max(this->image.width()-1, this->image.height()-1)));
+
+	int scale = 1 << (layers - skipLayers);
+	for(std::size_t y = 0; y < this->image.height(); y += scale)
+		for(std::size_t x = 0; x < this->image.width(); x += scale)
+		{
+			unsigned char rawColour;
+			_input.read(reinterpret_cast<char*>(&rawColour), sizeof(rawColour));
+
+			this->image.set(x, y, RgbColour(rawColour, 0, 0));
+		}
 
 	for(int layer = layers - 3; layer > 0; --layer)
 	{
@@ -81,7 +103,10 @@ void ImageCompressor::decompress(std::istream& _input)
 				};
 				ImageLayerCompressor layerCompressor(this->image, start, end, scale);
 
+				std::streampos preEncodeStreamPos = _input.tellg();
 				layerCompressor.decompress(_input);
+
+				std::cout<<"layer size="<<(_input.tellg()-preEncodeStreamPos)<<std::endl;
 			}
 	}
 }

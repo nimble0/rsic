@@ -18,7 +18,7 @@ class Image
 	std::vector<TColour> pixels;
 
 public:
-    Image(std::size_t _width, std::size_t _height) :
+    Image(std::size_t _width = 0, std::size_t _height = 0) :
 		width_{_width},
 		height_{_height},
 		pixels{width_*height_}
@@ -88,10 +88,22 @@ public:
 
 		for(std::size_t y = 0; y < _height; ++y)
 			std::copy(&this->pixels[y * this->width_], &this->pixels[y * this->width_ + copyWidth], &newPixels[y * _width]);
-			
+
 		this->width_ = _width;
 		this->height_ = _height;
 		this->pixels.swap(newPixels);
+	}
+
+	void save(std::string _path)
+	{
+		Magick::Image image;
+		image.resize(Magick::Geometry(this->width(), this->height()));
+
+		for(std::size_t y = 0; y < this->height_; ++y)
+			for(std::size_t x = 0; x < this->width_; ++x)
+				image.pixelColor(x, y, Magick::ColorRGB(this->get(x,y).r(), 0, 0));
+
+		image.write(_path);
 	}
 };
 

@@ -14,8 +14,9 @@
 
 class LaplaceEncodingDistribution : public EncodingDistribution<unsigned char>
 {
-	static const Range RANGE_RESERVED = 256*256;
-	static const Range VAR_RANGE_MAX = ArithmeticEncoder::RANGE_MAX - RANGE_RESERVED;
+	static const DoubleRange RANGE_RESERVED = 256*ArithmeticEncoder::MIN_RANGE_SIZE;
+	static const DoubleRange VAR_RANGE_MAX = std::numeric_limits<ArithmeticEncoder::Range>::max() - RANGE_RESERVED;
+	static const DoubleRange START_RESERVED = VAR_RANGE_MAX + 1;
 
 	double mu;
 	double b;
@@ -50,27 +51,24 @@ public:
 		scale{end-start}
 	{}
 
-	std::pair<Range, Range> getRange(unsigned char _v)
+	std::pair<Range, DoubleRange> getRange(unsigned char _v)
 	{
-		double cfStart = this->cdf(_v-0.5);
-		double cfSize = this->cdf(_v+0.5) - cfStart;
+		double cfStart = (this->cdf(_v-0.5) - this->start)/this->scale;
+		double cfEnd = (this->cdf(_v+0.5) - this->start)/this->scale;
 
-		cfStart -= this->start;
-
-		cfStart /= this->scale;
-		cfSize /= this->scale;
-
-		std::pair<Range, Range> range
+		std::pair<Range, DoubleRange> range
 		{
-			cfStart * VAR_RANGE_MAX,
-			cfSize * VAR_RANGE_MAX
+			std::ceil(cfStart * START_RESERVED),
+			std::min(
+				+START_RESERVED,
+				static_cast<DoubleRange>(std::ceil(cfEnd * START_RESERVED)))
 		};
 
-		if(range.second < 256)
+		if(range.second - range.first < ArithmeticEncoder::MIN_RANGE_SIZE)
 			return
 			{
-				VAR_RANGE_MAX + 1 + _v*256,
-				256
+				START_RESERVED + _v*ArithmeticEncoder::MIN_RANGE_SIZE,
+				START_RESERVED + (_v+1)*ArithmeticEncoder::MIN_RANGE_SIZE,
 			};
 		else
 			return range;
@@ -78,25 +76,28 @@ public:
 
 	std::pair<
 		unsigned char,
-		std::pair<Range, Range>> getValue(Range _r)
+		std::pair<Range, DoubleRange>> getValue(Range _r)
 	{
-		if(_r <= VAR_RANGE_MAX)
+
+		if(_r < START_RESERVED)
 		{
-			unsigned char v = static_cast<unsigned char>(this->inverseCdf(
-				this->start + ((static_cast<double>(_r)+1)/VAR_RANGE_MAX)*this->scale)+0.5);
+			unsigned char v = static_cast<unsigned char>(
+				this->inverseCdf(
+					this->start + (static_cast<double>(_r)/START_RESERVED)*this->scale)
+				+0.5);
 
 			return { v, this->getRange(v) };
 		}
 		else
 		{
-			unsigned char v = ( _r - VAR_RANGE_MAX)/256;
+			unsigned char v = ( _r - START_RESERVED)/ArithmeticEncoder::MIN_RANGE_SIZE;
 
 			return
 			{
 				v,
 				{
-					VAR_RANGE_MAX + 1 + v*256,
-					256
+					START_RESERVED + v*ArithmeticEncoder::MIN_RANGE_SIZE,
+					START_RESERVED + (v+1)*ArithmeticEncoder::MIN_RANGE_SIZE,
 				}
 			};
 		}

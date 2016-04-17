@@ -13,18 +13,18 @@ class UniformEncodingDistribution : public EncodingDistribution<unsigned char>
 public:
 	using EncodingDistribution::EncodingDistribution;
 
-	std::pair<Range, Range> getRange(unsigned char _v)
+	std::pair<Range, DoubleRange> getRange(unsigned char _v)
 	{
-		return {_v*256*256*256, 256*256*256-((_v==255)?1:0)};
+		return {_v*256*256*256, (_v+1)*256*256*256};
 	}
 
 	std::pair<
 		unsigned char,
-		std::pair<Range, Range>> getValue(Range _v)
+		std::pair<Range, DoubleRange>> getValue(Range _r)
 	{
-		unsigned char value = _v/(256*256*256);
+		unsigned char v = _r/(256*256*256);
 
-		return {value, {value*256*256*256, 256*256*256-((value==255)?1:0)}};
+		return {v, this->getRange(v)};
 	}
 };
 

@@ -25,7 +25,7 @@ double VarDistribution::cubicInterpolate(double y0, double y1, double y2, double
 std::pair<double, double> VarDistribution::getDist(unsigned char _val) const
 {
 	int i = 0;
-	for(; i < this->curvePoints.size() && this->curvePoints[i].first < _val; ++i);
+	for(; i < this->curvePoints.size() && this->curvePoints[i].first <= _val; ++i);
 
 	std::pair<int, double> y0 = this->curvePoints[std::max(i-2, 0)];
 	std::pair<int, double> y1 = this->curvePoints[std::max(i-1, 0)];

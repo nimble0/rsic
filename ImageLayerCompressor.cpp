@@ -130,8 +130,6 @@ void ImageLayerCompressor::compress(std::ostream& _output)
 		<<this->end.first<<", "<<this->end.second<<")"
 		<<" scale="<<this->scale<<std::endl;
 
-	ArithmeticEncoder encoder(_output);
-
 	calcDists(this->aDists, {this->halfScale, 0}, this->aDistVars);
 	calcDists(this->bDists, {0, this->halfScale}, this->bDistVars);
 	calcDists(this->cDists, {this->halfScale, this->halfScale}, this->cDistVars);
@@ -139,6 +137,8 @@ void ImageLayerCompressor::compress(std::ostream& _output)
 	this->aDists.encodeDist(_output);
 	this->bDists.encodeDist(_output);
 	this->cDists.encodeDist(_output);
+
+	ArithmeticEncoder encoder(_output);
 
 	for(std::size_t y = this->start.second; y < this->end.second; y += this->scale)
 		for(std::size_t x = this->start.first; x < this->end.first; x += this->scale)
@@ -161,12 +161,12 @@ void ImageLayerCompressor::decompress(std::istream& _input)
 		<<this->end.first<<", "<<this->end.second<<")"
 		<<" scale="<<this->scale<<std::endl;
 
-	ArithmeticDecoder decoder(_input, this->pixelCount());
-	decoder.open();
-
 	this->aDists.decodeDist(_input);
 	this->bDists.decodeDist(_input);
 	this->cDists.decodeDist(_input);
+
+	ArithmeticDecoder decoder(_input);
+	decoder.open();
 
 	for(std::size_t y = this->start.second; y < this->end.second; y += this->scale)
 		for(std::size_t x = this->start.first; x < this->end.first; x += this->scale)

@@ -19,7 +19,8 @@ find_package(ImageMagick COMPONENTS Magick++)
 find_package(Boost COMPONENTS system REQUIRED)
 
 include_directories(${ImageMagick_INCLUDE_DIRS})
-add_executable(imagecompressor
+
+add_executable(image_compress
 	ArithmeticEncoder.cpp
 	ArithmeticDecoder.cpp
 	Image.cpp
@@ -28,10 +29,24 @@ add_executable(imagecompressor
 	ImageLayerCompressor.cpp
 	ImageCompressor.cpp
 
-	main.cpp
+	compress_main.cpp
 )
-target_link_libraries(imagecompressor ${ImageMagick_LIBRARIES})
-target_link_libraries(imagecompressor ${Boost_LIBRARIES})
+target_link_libraries(image_compress ${ImageMagick_LIBRARIES})
+target_link_libraries(image_compress ${Boost_LIBRARIES})
+
+add_executable(image_decompress
+	ArithmeticEncoder.cpp
+	ArithmeticDecoder.cpp
+	Image.cpp
+	VarDistribution.cpp
+	MultiVarEncodingDistribution.cpp
+	ImageLayerCompressor.cpp
+	ImageCompressor.cpp
+
+	decompress_main.cpp
+)
+target_link_libraries(image_decompress ${ImageMagick_LIBRARIES})
+target_link_libraries(image_decompress ${Boost_LIBRARIES})
 
 add_executable(imagecompressor_test
 	ArithmeticEncoder.cpp
@@ -44,4 +59,4 @@ add_executable(imagecompressor_test
 target_link_libraries(imagecompressor_test ${ImageMagick_LIBRARIES})
 target_link_libraries(imagecompressor_test ${Boost_LIBRARIES})
 
-install(TARGETS imagecompressor RUNTIME DESTINATION bin)
+install(TARGETS image_compress image_decompress RUNTIME DESTINATION bin)
