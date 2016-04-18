@@ -96,12 +96,15 @@ public:
 
 	void save(std::string _path)
 	{
-		Magick::Image image;
-		image.resize(Magick::Geometry(this->width(), this->height()));
+		Magick::Image image(Magick::Geometry(this->width(), this->height()), "white");
 
 		for(std::size_t y = 0; y < this->height_; ++y)
 			for(std::size_t x = 0; x < this->width_; ++x)
-				image.pixelColor(x, y, Magick::ColorRGB(this->get(x,y).r(), 0, 0));
+				image.pixelColor(x, y,
+					Magick::ColorRGB(
+						this->get(x,y).r()/255.0,
+						this->get(x,y).g()/255.0,
+						this->get(x,y).b()/255.0));
 
 		image.write(_path);
 	}

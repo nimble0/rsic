@@ -59,7 +59,15 @@ std::vector<std::pair<bool, unsigned char>> ImageLayerCompressor::getVarValues(
 			_i.second + offset.second
 		};
 
-		std::pair<bool, unsigned char> varValue{this->image.check(offsettedI), 0};
+		std::pair<bool, unsigned char> varValue
+		{
+			this->image.check(offsettedI) &&
+			(offsettedI.first%this->scale == 0 &&
+				offsettedI.second%this->scale == 0) ||
+			(offsettedI.first < this->end.first &&
+				offsettedI.second < this->end.second),
+			0
+		};
 
 		if(varValue.first)
 			varValue.second = this->image.get(offsettedI).r();
@@ -101,7 +109,11 @@ void ImageLayerCompressor::decodePixel(
 	};
 
 	if(this->image.check(decodeI))
-		this->image.set(decodeI, RgbColour(_dist.decode(_decoder, this->getVarValues(_vars, _base)),0,0));
+	{
+		unsigned char decodedVal = _dist.decode(_decoder, this->getVarValues(_vars, _base));
+
+		this->image.set(decodeI, RgbColour(decodedVal, decodedVal, decodedVal));
+	}
 }
 
 std::size_t ImageLayerCompressor::pixelCount() const

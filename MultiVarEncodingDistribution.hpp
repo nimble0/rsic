@@ -69,6 +69,7 @@ public:
 		if(combinedDist.second != 0)
 		{
 			LaplaceEncodingDistribution encodeDist(combinedDist.first, combinedDist.second);
+
 			return encodeDist.decode(_decoder);
 		}
 		else
