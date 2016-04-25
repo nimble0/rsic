@@ -17,25 +17,17 @@ class ArithmeticEncoder;
 
 
 
-class ImageLayerCompressor
+class ImageSegmentCompressor
 {
 	Image<RgbColour>& image;
 
 	std::pair<std::size_t, std::size_t> start;
 	std::pair<std::size_t, std::size_t> end;
 
-	int scale;
-	int halfScale;
+	std::pair<std::size_t, std::size_t> increment;
 
-	std::vector<std::pair<int, int>>
-		aDistVars,
-		bDistVars,
-		cDistVars;
-
-	MultiVarEncodingDistribution
-		aDists,
-		bDists,
-		cDists;
+	std::vector<std::pair<int, int>> vars;
+	MultiVarEncodingDistribution dist;
 
 
 	std::vector<std::pair<bool, unsigned char>> getVarValues(
@@ -46,45 +38,31 @@ class ImageLayerCompressor
 		ArithmeticEncoder& _encoder,
 		MultiVarEncodingDistribution& _dist,
 		const std::vector<std::pair<int, int>>& _vars,
-		std::pair<std::size_t, std::size_t> _base,
 		std::pair<std::size_t, std::size_t> _offset);
 
 	void decodePixel(
 		ArithmeticDecoder& _decoder,
 		MultiVarEncodingDistribution& _dist,
 		const std::vector<std::pair<int, int>>& _vars,
-		std::pair<std::size_t, std::size_t> _base,
 		std::pair<std::size_t, std::size_t> _offset);
 
-	void calcDists(MultiVarEncodingDistribution& _dist, std::pair<int, int> _encodeOffset, std::vector<std::pair<int, int>>& _offsets);
+	void calcDists(MultiVarEncodingDistribution& _dist, std::vector<std::pair<int, int>>& _offsets);
 
 public:
-	ImageLayerCompressor(
+	ImageSegmentCompressor(
 		Image<RgbColour>& _image,
 		std::pair<std::size_t, std::size_t> _start,
 		std::pair<std::size_t, std::size_t> _end,
-		int _scale
+		std::pair<std::size_t, std::size_t> _increment,
+		std::vector<std::pair<int, int>> _vars
 	) :
 		image(_image),
 		start{_start},
 		end{_end},
-		scale{_scale},
-		halfScale{scale/2},
-		aDistVars{
-			{0, 0},
-			{this->scale, 0}},
-		bDistVars{
-			{0, 0},
-			{0, this->scale}},
-		cDistVars{
-			{this->halfScale, 0},
-			{this->halfScale, this->scale}},
-		aDists(aDistVars.size()),
-		bDists(bDistVars.size()),
-		cDists(cDistVars.size())
+		increment{_increment},
+		vars(_vars),
+		dist(vars.size())
 	{}
-
-	std::size_t pixelCount() const;
 
 	void compress(std::ostream& _output);
 	void decompress(std::istream& _input);

@@ -64,6 +64,21 @@ void ArithmeticEncoder::writeFixedBytes()
 	}
 }
 
+ArithmeticEncoder::Range ArithmeticEncoder::removeOverflow(DoubleRange _pos)
+{
+	if(_pos >= RANGE_MAX)
+	{
+		// Add one, accounting for any overflow
+		for(unsigned char& c : boost::adaptors::reverse(this->writeBytes))
+			if(++c != 0)
+				break;
+
+		_pos -= RANGE_MAX;
+	}
+
+	return _pos;
+}
+
 void ArithmeticEncoder::encode(std::pair<Range, DoubleRange> _range)
 {
 	assert(this->active);
@@ -79,17 +94,7 @@ void ArithmeticEncoder::encode(std::pair<Range, DoubleRange> _range)
 
 	start += this->range.first;
 
-	if(start >= RANGE_MAX)
-	{
-		// Add one, accounting for any overflow
-		for(unsigned char& c : boost::adaptors::reverse(this->writeBytes))
-			if(++c != 0)
-				break;
-
-		start -= RANGE_MAX;
-	}
-
-	this->range = {start, size};
+	this->range = {this->removeOverflow(start), size};
 
 	this->writeFixedBytes();
 
@@ -98,16 +103,25 @@ void ArithmeticEncoder::encode(std::pair<Range, DoubleRange> _range)
 
 void ArithmeticEncoder::close()
 {
-	for(unsigned char c : this->writeBytes)
-		this->output.put(c);
-	this->writeBytes.clear();
+	std::size_t writeBytesPreSize = this->writeBytes.size();
 
 	this->scaleRange();
+
 	// Scale up range so that the range encompassses the max range
 	if(this->range.second < RANGE_MAX)
-		this->writeBytes.push_back((this->range.first + (1<<LAST_BYTE_SHIFT) - 1)>>LAST_BYTE_SHIFT);
+	{
+		DoubleRange writePos = static_cast<DoubleRange>(this->range.first) + (1<<LAST_BYTE_SHIFT) - 1;
 
-	this->writeBytes.insert(this->writeBytes.end(), 4 - this->writeBytes.size(), 0);
+		this->writeBytes.push_back(this->removeOverflow(writePos)>>LAST_BYTE_SHIFT);
+	}
+
+	// Write padding bytes, these are important to make sure
+	// encoder write sizes and decoder read sizes match
+	this->writeBytes.insert(
+			this->writeBytes.end(),
+			std::numeric_limits<ArithmeticEncoder::Range>::digits/8
+			- (this->writeBytes.size() - writeBytesPreSize),
+			0);
 
 	for(unsigned char c : this->writeBytes)
 		this->output.put(c);

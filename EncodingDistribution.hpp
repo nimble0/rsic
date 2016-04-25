@@ -26,6 +26,8 @@ public:
 		assert(this->getValue(range.second - 1) == std::make_pair(_v, range));
 
 		_encoder.encode(range);
+
+		this->update(_v);
 	}
 
 	TEncode decode(ArithmeticDecoder& _decoder)
@@ -39,14 +41,17 @@ public:
 
 		_decoder.decode(v.second);
 
+		this->update(v.first);
+
 		return v.first;
 	}
 
-	virtual std::pair<Range, DoubleRange> getRange(TEncode _v)=0;
-
+	virtual std::pair<Range, DoubleRange> getRange(TEncode _v) const=0;
 	virtual std::pair<
 		TEncode,
-		std::pair<Range, DoubleRange>>    getValue(Range _v)=0;
+		std::pair<Range, DoubleRange>>    getValue(Range _v) const=0;
+
+	virtual void update(TEncode _v) {};
 };
 
 #endif // ENCODINGDISTRIBUTION_HPP

@@ -42,6 +42,7 @@ private:
 
 	void scaleRange();
 	void writeFixedBytes();
+	Range removeOverflow(DoubleRange _pos);
 
 public:
 	ArithmeticEncoder(std::ostream& _output) :

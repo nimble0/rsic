@@ -26,7 +26,7 @@ add_executable(image_compress
 	Image.cpp
 	VarDistribution.cpp
 	MultiVarEncodingDistribution.cpp
-	ImageLayerCompressor.cpp
+	ImageSegmentCompressor.cpp
 	ImageCompressor.cpp
 
 	compress_main.cpp
@@ -40,7 +40,7 @@ add_executable(image_decompress
 	Image.cpp
 	VarDistribution.cpp
 	MultiVarEncodingDistribution.cpp
-	ImageLayerCompressor.cpp
+	ImageSegmentCompressor.cpp
 	ImageCompressor.cpp
 
 	decompress_main.cpp

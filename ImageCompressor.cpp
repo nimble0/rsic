@@ -7,12 +7,62 @@
 #include <utility>
 #include <cmath>
 
-#include "ImageLayerCompressor.hpp"
-#include "RgbColour.hpp"
-#include "Image.hpp"
+#include "ImageSegmentCompressor.hpp"
 
 #include <iostream>
 
+
+void ImageCompressor::compressLayer(
+	std::ostream& _output,
+	std::pair<std::size_t, std::size_t> _increment,
+	std::pair<std::size_t, std::size_t> _startOffset,
+	int _layerSize,
+	const std::vector<std::pair<int, int>>& _vars) const
+{
+	this->processLayer(
+		_startOffset,
+		_layerSize,
+		[&](std::pair<std::size_t, std::size_t> _start, std::pair<std::size_t, std::size_t> _end)
+		{
+			ImageSegmentCompressor layerCompressor(
+				this->image,
+				_start,
+				_end,
+				_increment,
+				_vars);
+			std::streampos preProcessStreamPos = _output.tellp();
+			layerCompressor.compress(_output);
+
+			std::cout<<"layer size="<<(_output.tellp()-preProcessStreamPos)<<std::endl;
+		}
+	);
+}
+
+void ImageCompressor::decompressLayer(
+	std::istream& _input,
+	std::pair<std::size_t, std::size_t> _increment,
+	std::pair<std::size_t, std::size_t> _startOffset,
+	int _layerSize,
+	const std::vector<std::pair<int, int>>& _vars) const
+{
+	this->processLayer(
+		_startOffset,
+		_layerSize,
+		[&](std::pair<std::size_t, std::size_t> _start, std::pair<std::size_t, std::size_t> _end)
+		{
+			ImageSegmentCompressor layerCompressor(
+				this->image,
+				_start,
+				_end,
+				_increment,
+				_vars);
+			std::streampos preProcessStreamPos = _input.tellg();
+			layerCompressor.decompress(_input);
+
+			std::cout<<"layer size="<<(_input.tellg()-preProcessStreamPos)<<std::endl;
+		}
+	);
+}
 
 void ImageCompressor::compress(std::ostream& _output) const
 {
@@ -38,26 +88,22 @@ void ImageCompressor::compress(std::ostream& _output) const
 	for(int layer = layers - skipLayers; layer > 0; --layer)
 	{
 		int scale = 1 << layer;
-		int divisions = std::max((layers-layer)-divisionSize, 0);
+		int halfScale = scale >> 1;
 		int layerSize = divisionSize*scale;
 
-		for(std::pair<std::size_t, std::size_t> start = {0,0};
-			start.second < this->image.height(); start.second += layerSize)
-			for(start.first = 0; start.first < this->image.width(); start.first += layerSize)
-			{
-				std::pair<std::size_t, std::size_t> end
-				{
-					start.first + layerSize,
-					start.second + layerSize,
-				};
-				ImageLayerCompressor layerCompressor(this->image, start, end, scale);
+		this->compressLayer(
+			_output,
+			{scale, scale},
+			{halfScale, 0},
+			layerSize,
+			scaleVars(aVars, halfScale));
 
-
-				std::streampos preEncodeStreamPos = _output.tellp();
-				layerCompressor.compress(_output);
-
-				std::cout<<"layer size="<<(_output.tellp()-preEncodeStreamPos)<<std::endl;
-			}
+		this->compressLayer(
+			_output,
+			{halfScale, scale},
+			{0, halfScale},
+			layerSize,
+			scaleVars(bVars, halfScale));
 	}
 }
 
@@ -86,27 +132,24 @@ void ImageCompressor::decompress(std::istream& _input)
 			this->image.set(x, y, RgbColour(rawColour, 0, 0));
 		}
 
-	for(int layer = layers - 3; layer > 0; --layer)
+	for(int layer = layers - skipLayers; layer > 0; --layer)
 	{
 		int scale = 1 << layer;
-		int divisions = std::max((layers-layer)-divisionSize, 0);
+		int halfScale = scale >> 1;
 		int layerSize = divisionSize*scale;
 
-		for(std::pair<std::size_t, std::size_t> start = {0,0};
-			start.second < this->image.height(); start.second += layerSize)
-			for(start.first = 0; start.first < this->image.width(); start.first += layerSize)
-			{
-				std::pair<std::size_t, std::size_t> end
-				{
-					start.first + layerSize,
-					start.second + layerSize,
-				};
-				ImageLayerCompressor layerCompressor(this->image, start, end, scale);
+		this->decompressLayer(
+			_input,
+			{scale, scale},
+			{halfScale, 0},
+			layerSize,
+			scaleVars(aVars, halfScale));
 
-				std::streampos preEncodeStreamPos = _input.tellg();
-				layerCompressor.decompress(_input);
-
-				std::cout<<"layer size="<<(_input.tellg()-preEncodeStreamPos)<<std::endl;
-			}
+		this->decompressLayer(
+			_input,
+			{halfScale, scale},
+			{0, halfScale},
+			layerSize,
+			scaleVars(bVars, halfScale));
 	}
 }

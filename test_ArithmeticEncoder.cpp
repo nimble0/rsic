@@ -103,7 +103,7 @@ TEST_CASE( "Test normal distribution", "[normal_distribution]" )
 
 TEST_CASE( "Test laplace distribution", "[laplace_distribution]" )
 {
-	LaplaceEncodingDistribution encodeDist(100, 100);
+	LaplaceEncodingDistribution encodeDist(70.239466369334451, 1.2228440911461289);
 
 	testDistribution(encodeDist);
 }

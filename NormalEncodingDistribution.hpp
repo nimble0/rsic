@@ -30,7 +30,7 @@ public:
 		scale{end-start}
 	{}
 
-	std::pair<Range, DoubleRange> getRange(unsigned char _v)
+	std::pair<Range, DoubleRange> getRange(unsigned char _v) const
 	{
 		double cfStart = (boost::math::cdf(this->dist, _v-0.5) - this->start)/this->scale;
 		double cfEnd = (boost::math::cdf(this->dist, _v+0.5) - this->start)/this->scale;
@@ -55,7 +55,7 @@ public:
 
 	std::pair<
 		unsigned char,
-		std::pair<Range, DoubleRange>> getValue(Range _r)
+		std::pair<Range, DoubleRange>> getValue(Range _r) const
 	{
 		if(_r < START_RESERVED)
 		{
