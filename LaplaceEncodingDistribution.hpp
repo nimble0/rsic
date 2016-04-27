@@ -85,7 +85,14 @@ public:
 					this->start + (static_cast<long double>(_r)/START_RESERVED)*this->scale)
 				+0.5);
 
-			return { v, this->getRange(v) };
+			std::pair<
+				unsigned char,
+				std::pair<Range, DoubleRange>> result = { v, this->getRange(v) };
+
+			if(_r < result.second.first)
+				result = { v-1, this->getRange(v-1) };
+
+			return result;
 		}
 		else
 		{

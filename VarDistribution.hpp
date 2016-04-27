@@ -19,9 +19,6 @@ class VarDistribution
 	std::vector<std::pair<int, double>> curvePoints;
 
 
-	static double cubicInterpolate(double y0, double y1, double y2, double y3, double mu);
-
-
 public:
 	std::pair<double, double> getDist(unsigned char _val) const;
 

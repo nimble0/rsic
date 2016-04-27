@@ -71,18 +71,13 @@ void ImageCompressor::processLayer(
 	int _layerSize,
 	TFunc _func) const
 {
-	for(std::pair<std::size_t, std::size_t> baseStart = {0,0};
-	    baseStart.second < this->image.height();
-	    baseStart.second += _layerSize)
-		for(baseStart.first = 0;
-		    baseStart.first < this->image.width();
-		    baseStart.first += _layerSize)
+	for(std::pair<std::size_t, std::size_t> start = _startOffset;
+	    start.second < this->image.height();
+	    start.second += _layerSize)
+		for(start.first = _startOffset.first;
+		    start.first < this->image.width();
+		    start.first += _layerSize)
 		{
-			std::pair<std::size_t, std::size_t> start
-			{
-				baseStart.first + _startOffset.first,
-				baseStart.second + _startOffset.second
-			};
 			std::pair<std::size_t, std::size_t> end
 			{
 				start.first + _layerSize,
