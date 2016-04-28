@@ -73,9 +73,17 @@ std::pair<double, double> VarDistribution::getDist(unsigned char _val) const
 	std::pair<int, double> y2 = this->curvePoints[std::min(i, static_cast<int>(this->curvePoints.size())-1)];
 	std::pair<int, double> y3 = this->curvePoints[std::min(i+1, static_cast<int>(this->curvePoints.size())-1)];
 
+	if(_val <= y1.first)
+		return { _val, y1.second };
+
+	if(_val >= y2.first)
+		return { _val, y2.second };
+
 	double mu = static_cast<double>(_val-y1.first)/(y2.first - y1.first);
 
-	return {_val, linearInterpolate(y1.second, y2.second, mu)};
+	assert(mu >= 0 && mu <= 1);
+
+	return { _val, linearInterpolate(y1.second, y2.second, mu) };
 }
 
 void VarDistribution::encodeDist(std::ostream& _out) const
@@ -83,10 +91,10 @@ void VarDistribution::encodeDist(std::ostream& _out) const
 	unsigned char nCurvePoints = this->curvePoints.size()-2;
 	_out.write(reinterpret_cast<char*>(&nCurvePoints), sizeof(nCurvePoints));
 
-	for(auto curvePoint = this->curvePoints.begin()+1; curvePoint != this->curvePoints.end()-1; ++curvePoint)
+	for(const std::pair<int, double>& curvePoint : this->curvePoints)
 	{
-		unsigned char x = curvePoint->first;
-		unsigned char y = toCompactFp<unsigned char, false, 4, 4>(curvePoint->second * std::exp2(3));
+		unsigned char x = curvePoint.first;
+		unsigned char y = toCompactFp<unsigned char, false, 4, 4>(curvePoint.second * std::exp2(3));
 
 		_out.write(reinterpret_cast<char*>(&x), sizeof(x));
 		_out.write(reinterpret_cast<char*>(&y), sizeof(y));
@@ -109,12 +117,6 @@ void VarDistribution::decodeDist(std::istream& _in)
 
 		curvePoint = {x, fromCompactFp<unsigned char, false, 4, 4>(y) * std::exp2(-3)};
 	}
-
-	this->curvePoints.insert(
-		this->curvePoints.begin(),
-		{0, this->curvePoints.front().second});
-	this->curvePoints.push_back(
-		{255, this->curvePoints.back().second});
 }
 
 void VarDistribution::Calculator::add(int _val, unsigned char _v)
@@ -175,7 +177,4 @@ void VarDistribution::Calculator::calculate()
 
 		++i;
 	}
-
-	this->dist.curvePoints.front() = {0, this->dist.curvePoints[1].second};
-	this->dist.curvePoints.push_back({255, this->dist.curvePoints.back().second});
 }
