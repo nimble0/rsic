@@ -17,10 +17,16 @@ TInt toCompactFp(double _fp)
 	int exponent;
 	double mantissa = std::abs(std::frexp(_fp, &exponent));
 
-    assert(exponent < (static_cast<TInt>(1)<<EXPONENT_BITS));
-
-	TInt result = (mantissa - 0.5) * std::exp2(1+MANTISSA_BITS) + (ROUND?0.5:0);
-	result |= static_cast<TInt>(exponent)<<MANTISSA_BITS;
+	TInt result;
+	if(exponent > (static_cast<TInt>(1)<<EXPONENT_BITS) - 1)
+		result = ~((~static_cast<TInt>(0))<<(EXPONENT_BITS + MANTISSA_BITS));
+	else if(exponent < 0)
+		result = 0;
+	else
+	{
+		result = std::max(mantissa - 0.5, 0.0) * std::exp2(1+MANTISSA_BITS) + (ROUND?0.5:0);
+		result |= static_cast<TInt>(exponent)<<MANTISSA_BITS;
+	}
 
 	result |= (SIGN_BIT && _fp < 0)<<(EXPONENT_BITS + MANTISSA_BITS);
 
@@ -63,8 +69,19 @@ double linearInterpolate(double y1, double y2, double mu)
 }
 
 
+void VarDistribution::addPoint(int _i, double _sigma)
+{
+	_sigma = fromCompactFp<unsigned char, false, 4, 4>(
+		toCompactFp<unsigned char, false, 4, 4>(_sigma*std::exp2(3))
+			)*std::exp2(-3);
+
+	this->curvePoints.push_back({_i, _sigma});
+}
+
 std::pair<double, double> VarDistribution::getDist(unsigned char _val) const
 {
+	assert(!this->curvePoints.empty());
+
 	int i = 0;
 	for(; i < this->curvePoints.size() && this->curvePoints[i].first <= _val; ++i);
 
@@ -88,7 +105,7 @@ std::pair<double, double> VarDistribution::getDist(unsigned char _val) const
 
 void VarDistribution::encodeDist(std::ostream& _out) const
 {
-	unsigned char nCurvePoints = this->curvePoints.size()-2;
+	unsigned char nCurvePoints = this->curvePoints.size();
 	_out.write(reinterpret_cast<char*>(&nCurvePoints), sizeof(nCurvePoints));
 
 	for(const std::pair<int, double>& curvePoint : this->curvePoints)
@@ -121,60 +138,10 @@ void VarDistribution::decodeDist(std::istream& _in)
 
 void VarDistribution::Calculator::add(int _val, unsigned char _v)
 {
-	int p = _v;
-	int pp = p*p;
-
-	auto& varTotals = this->totals[_val];
-	++std::get<0>(varTotals);
-	std::get<1>(varTotals) += p;
-	std::get<2>(varTotals) += pp;
+	++this->counts[_val][_v];
 }
 
 void VarDistribution::Calculator::calculate()
 {
-	const int CURVE_SEGMENT_SIZE = 1024;
-
-	this->dist.curvePoints.emplace_back();
-
-	int n = 0;
-	for(auto& total : this->totals)
-		n += std::get<0>(total);
-
-	const int segmentSize = std::min(n, CURVE_SEGMENT_SIZE);
-
-	int i = 0;
-	int segmentN = 0;
-	int sumWeighedI = 0;
-	double sumSigma = 0;
-
-	for(auto& total : this->totals)
-	{
-		if(std::get<0>(total) != 0)
-		{
-			double mu = static_cast<double>(std::get<1>(total))/std::get<0>(total);
-			double sigma = std::sqrt(static_cast<double>(std::get<2>(total))/std::get<0>(total) - mu*mu);
-
-			segmentN += std::get<0>(total);
-			sumWeighedI += i * std::get<0>(total);
-			sumSigma += sigma * std::get<0>(total);
-
-			if(segmentN >= segmentSize)
-			{
-				int averageI = sumWeighedI/segmentN;
-				double averageSigma = sumSigma/segmentN;
-
-				averageSigma = fromCompactFp<unsigned char, false, 4, 4>(
-					toCompactFp<unsigned char, false, 4, 4>(averageSigma*std::exp2(3))
-					 )*std::exp2(-3);
-
-				this->dist.curvePoints.push_back({averageI, averageSigma});
-
-				segmentN = 0;
-				sumWeighedI = 0;
-				sumSigma = 0;
-			}
-		}
-
-		++i;
-	}
+	this->dist = VarDistribution(this->counts);
 }
