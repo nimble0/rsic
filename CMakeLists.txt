@@ -23,9 +23,15 @@ include_directories(${ImageMagick_INCLUDE_DIRS})
 add_executable(image_compress
 	ArithmeticEncoder.cpp
 	ArithmeticDecoder.cpp
-	Image.cpp
+	EncodingDistribution.cpp
+
+	NormalEncodingDistribution.cpp
+	LaplaceEncodingDistribution.cpp
+	CombinedEncodingDistribution.cpp
 	VarDistribution.cpp
 	MultiVarEncodingDistribution.cpp
+
+	Image.cpp
 	ImageSegmentCompressor.cpp
 	ImageCompressor.cpp
 
@@ -37,9 +43,15 @@ target_link_libraries(image_compress ${Boost_LIBRARIES})
 add_executable(image_decompress
 	ArithmeticEncoder.cpp
 	ArithmeticDecoder.cpp
-	Image.cpp
+	EncodingDistribution.cpp
+
+	NormalEncodingDistribution.cpp
+	LaplaceEncodingDistribution.cpp
+	CombinedEncodingDistribution.cpp
 	VarDistribution.cpp
 	MultiVarEncodingDistribution.cpp
+
+	Image.cpp
 	ImageSegmentCompressor.cpp
 	ImageCompressor.cpp
 
@@ -51,7 +63,17 @@ target_link_libraries(image_decompress ${Boost_LIBRARIES})
 add_executable(imagecompressor_test
 	ArithmeticEncoder.cpp
 	ArithmeticDecoder.cpp
+	EncodingDistribution.cpp
+
+	NormalEncodingDistribution.cpp
+	LaplaceEncodingDistribution.cpp
+	CombinedEncodingDistribution.cpp
+	VarDistribution.cpp
+	MultiVarEncodingDistribution.cpp
+
 	Image.cpp
+	ImageSegmentCompressor.cpp
+	ImageCompressor.cpp
 
 	test_ArithmeticEncoder.cpp
 	test_main.cpp

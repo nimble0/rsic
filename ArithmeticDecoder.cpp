@@ -6,6 +6,8 @@
 
 #include <cassert>
 
+#include <iostream>
+
 
 void ArithmeticDecoder::scaleRange()
 {
@@ -31,6 +33,8 @@ void ArithmeticDecoder::open()
 
 		this->position = (this->position<<8) + readByte;
 	}
+
+	this->active = true;
 }
 
 ArithmeticEncoder::Range ArithmeticDecoder::fraction()
@@ -40,8 +44,10 @@ ArithmeticEncoder::Range ArithmeticDecoder::fraction()
 	return ArithmeticEncoder::scaleUp(this->rangeSize, this->position);
 }
 
-void ArithmeticDecoder::decode(std::pair<ArithmeticEncoder::Range, ArithmeticEncoder::DoubleRange> _range)
+void ArithmeticDecoder::decode(std::pair<ArithmeticEncoder::Range, ArithmeticEncoder::Range> _range)
 {
+	assert(this->active);
+
 	ArithmeticEncoder::DoubleRange start = ArithmeticEncoder::scaleDown(this->rangeSize, _range.first);
 	this->position -= start;
 	this->rangeSize = ArithmeticEncoder::scaleDown(this->rangeSize, _range.second) - start;

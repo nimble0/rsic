@@ -20,25 +20,27 @@ public:
 	typedef std::uint32_t Range;
 	typedef std::uint_fast64_t DoubleRange;
 
-	static const DoubleRange      RANGE_MAX = static_cast<DoubleRange>(std::numeric_limits<Range>::max())+1;
-	static const DoubleRange      MIN_RANGE_SIZE = 256;
+	typedef std::pair<Range, Range> RangePair;
+
+	static const Range        RANGE_MAX = std::numeric_limits<Range>::max();
+	static const DoubleRange  MIN_RANGE_SIZE = 256;
 
 private:
-	std::ostream&                 output;
-	std::size_t                   size_;
+	std::ostream&             output;
+	std::size_t               size_;
 
-	static const int              LAST_BYTE_SHIFT = std::numeric_limits<Range>::digits-8;
-	std::pair<Range, DoubleRange> range;
+	static const int          LAST_BYTE_SHIFT = std::numeric_limits<Range>::digits-8;
+	RangePair                 range;
 
-	std::deque<unsigned char>     writeBytes;
-	bool                          writeBuffered;
-	unsigned char                 bufferedEncodeByte;
+	std::deque<unsigned char> writeBytes;
+	bool                      writeBuffered;
+	unsigned char             bufferedEncodeByte;
 
-	bool                          active;
+	bool                      active;
 
 
-	static DoubleRange scaleDown(DoubleRange _rMax, DoubleRange _r);
-	static DoubleRange scaleUp(DoubleRange _rMax, DoubleRange _r);
+	static Range scaleDown(Range _rMax, Range _r);
+	static Range scaleUp(Range _rMax, Range _r);
 
 	void scaleRange();
 	void writeFixedBytes();
@@ -55,8 +57,9 @@ public:
 
 	std::size_t size() const { return this->size_; }
 
-	void encode(std::pair<Range, DoubleRange> _range);
+	void encode(RangePair _range);
 
+	bool isOpen() { return this->active; }
 	void close();
 };
 

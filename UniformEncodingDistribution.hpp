@@ -8,21 +8,29 @@
 #include "EncodingDistribution.hpp"
 
 
-class UniformEncodingDistribution : public EncodingDistribution<unsigned char>
+class UniformEncodingDistribution : public EncodingDistribution
 {
-public:
-	using EncodingDistribution::EncodingDistribution;
+	int encodeRangeStart, encodeRangeSize;
 
-	std::pair<Range, DoubleRange> getRange(unsigned char _v) const
+public:
+	UniformEncodingDistribution(std::pair<int, int> _encodeRange) :
+		encodeRangeStart{_encodeRange.first},
+		encodeRangeSize{_encodeRange.second - _encodeRange.first}
+	{}
+
+	std::pair<Range, Range> getRange(int _v) const override
 	{
-		return {_v*256*256*256, (_v+1)*256*256*256};
+		return
+		{
+			(RANGE_MAX*static_cast<DoubleRange>(_v - this->encodeRangeStart))/this->encodeRangeSize,
+			(RANGE_MAX*static_cast<DoubleRange>(_v - this->encodeRangeStart + 1))/this->encodeRangeSize
+		};
 	}
 
-	std::pair<
-		unsigned char,
-		std::pair<Range, DoubleRange>> getValue(Range _r) const
+	std::pair<int, std::pair<Range, Range>> getValue(Range _r) const override
 	{
-		unsigned char v = _r/(256*256*256);
+		int v = this->encodeRangeStart
+			+ (this->encodeRangeSize*static_cast<DoubleRange>(_r))/RANGE_MAX;
 
 		return {v, this->getRange(v)};
 	}

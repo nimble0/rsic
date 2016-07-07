@@ -16,26 +16,28 @@
 
 
 // This tests the boundries between values
-template <class TEncode>
-void testDistribution(EncodingDistribution<TEncode>& _encodeDist)
+void testDistribution(EncodingDistribution& _encodeDist, std::pair<int, int> _encodeRange)
 {
-	for(int v = 0; v < 256; ++v)
+	for(int v = _encodeRange.first; v < _encodeRange.second; ++v)
 	{
-		std::pair<ArithmeticEncoder::Range, ArithmeticEncoder::DoubleRange>
+		std::pair<ArithmeticEncoder::Range, ArithmeticEncoder::Range>
 			range = _encodeDist.getRange(v);
 
-		std::pair<TEncode, std::pair<ArithmeticEncoder::Range, ArithmeticEncoder::DoubleRange>>
+		std::pair<int, std::pair<ArithmeticEncoder::Range, ArithmeticEncoder::Range>>
 			v2_ = _encodeDist.getValue(range.first);
 
-		CHECK( v == (int)v2_.first );
-		CHECK( range.first == v2_.second.first );
-		CHECK( range.second == v2_.second.second );
+		if(range.second - range.first > 0)
+		{
+			CHECK( v == (int)v2_.first );
+			CHECK( range.first == v2_.second.first );
+			CHECK( range.second == v2_.second.second );
 
-		v2_ = _encodeDist.getValue(range.second-1);
+			v2_ = _encodeDist.getValue(range.second-1);
 
-		CHECK( v == (int)v2_.first );
-		CHECK( range.first == v2_.second.first );
-		CHECK( range.second == v2_.second.second );
+			CHECK( v == (int)v2_.first );
+			CHECK( range.first == v2_.second.first );
+			CHECK( range.second == v2_.second.second );
+		}
 	}
 }
 
@@ -45,10 +47,9 @@ void testEncoding(int _seed)
 	generator.seed(_seed);
 	std::uniform_int_distribution<int> distribution(0,255);
 
+	NormalEncodingDistribution encodeDist({0, 256}, distribution(generator), distribution(generator)+100);
 
-	NormalEncodingDistribution encodeDist(distribution(generator), distribution(generator)+1);
-
-	testDistribution(encodeDist);
+	testDistribution(encodeDist, {0, 256});
 
 	std::vector<char> encodedData(1000);
 
@@ -88,22 +89,26 @@ void testEncoding(int _seed)
 	REQUIRE( readSize == writeSize );
 }
 
-TEST_CASE( "Test arithmetic encoding and decoding", "[arithmetic_encoding_decoding]" )
-{
-	for(int seed = 0; seed < 1000; ++seed)
-		testEncoding(seed);
-}
-
 TEST_CASE( "Test normal distribution", "[normal_distribution]" )
 {
-	NormalEncodingDistribution encodeDist(100, 100);
+	std::pair<int, int> encodeRange{0, 256};
 
-	testDistribution(encodeDist);
+	NormalEncodingDistribution encodeDist(encodeRange, 100, 100);
+
+	testDistribution(encodeDist, encodeRange);
 }
 
 TEST_CASE( "Test laplace distribution", "[laplace_distribution]" )
 {
-	LaplaceEncodingDistribution encodeDist(70.239466369334451, 1.2228440911461289);
+	std::pair<int, int> encodeRange{0, 256};
 
-	testDistribution(encodeDist);
+	LaplaceEncodingDistribution encodeDist(encodeRange, 70.239466369334451, 1.2228440911461289);
+
+	testDistribution(encodeDist, encodeRange);
+}
+
+TEST_CASE( "Test arithmetic encoding and decoding", "[arithmetic_encoding_decoding]" )
+{
+	for(int seed = 0; seed < 1000; ++seed)
+		testEncoding(seed);
 }

@@ -9,20 +9,14 @@
 #include <boost/range/adaptor/reversed.hpp>
 
 
-ArithmeticEncoder::DoubleRange ArithmeticEncoder::scaleDown(DoubleRange _rMax, DoubleRange _r)
+ArithmeticEncoder::Range ArithmeticEncoder::scaleDown(Range _rMax, Range _r)
 {
-	if(_rMax == RANGE_MAX)
-		return _r;
-	else
-		return (_r * _rMax)>>std::numeric_limits<Range>::digits;
+	return (static_cast<DoubleRange>(_r) * _rMax)>>std::numeric_limits<Range>::digits;
 }
 
-ArithmeticEncoder::DoubleRange ArithmeticEncoder::scaleUp(DoubleRange _rMax, DoubleRange _r)
+ArithmeticEncoder::Range ArithmeticEncoder::scaleUp(Range _rMax, Range _r)
 {
-	if(_rMax == RANGE_MAX)
-		return _r;
-	else
-		return ((_r<<std::numeric_limits<Range>::digits) + RANGE_MAX - 1)/_rMax;
+	return ((static_cast<DoubleRange>(_r)<<std::numeric_limits<Range>::digits) + RANGE_MAX - 1)/_rMax;
 }
 
 
@@ -66,20 +60,20 @@ void ArithmeticEncoder::writeFixedBytes()
 
 ArithmeticEncoder::Range ArithmeticEncoder::removeOverflow(DoubleRange _pos)
 {
-	if(_pos >= RANGE_MAX)
+	if(_pos > RANGE_MAX)
 	{
 		// Add one, accounting for any overflow
 		for(unsigned char& c : boost::adaptors::reverse(this->writeBytes))
 			if(++c != 0)
 				break;
 
-		_pos -= RANGE_MAX;
+		_pos -= RANGE_MAX+1;
 	}
 
 	return _pos;
 }
 
-void ArithmeticEncoder::encode(std::pair<Range, DoubleRange> _range)
+void ArithmeticEncoder::encode(RangePair _range)
 {
 	assert(this->active);
 	assert(_range.second - _range.first >= MIN_RANGE_SIZE);
@@ -87,7 +81,7 @@ void ArithmeticEncoder::encode(std::pair<Range, DoubleRange> _range)
 	this->scaleRange();
 
 	DoubleRange start = scaleDown(this->range.second, _range.first);
-	DoubleRange size = scaleDown(this->range.second, _range.second) - start;
+	Range size = scaleDown(this->range.second, _range.second) - start;
 
 	assert(scaleUp(this->range.second, start) >= _range.first);
 	assert(scaleUp(this->range.second, start+size-1) < _range.second);

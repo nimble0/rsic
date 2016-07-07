@@ -9,6 +9,8 @@
 #include <utility>
 #include "VarDistribution.hpp"
 #include "LaplaceEncodingDistribution.hpp"
+#include "UniformEncodingDistribution.hpp"
+#include "CombinedEncodingDistribution.hpp"
 
 class ArithmeticEncoder;
 
@@ -44,8 +46,13 @@ public:
 
 		if(combinedDist.second != 0)
 		{
-			LaplaceEncodingDistribution encodeDist(combinedDist.first, combinedDist.second);
-			encodeDist.encode(_encoder, _v);
+			std::pair<int, int> encodeRange{0, 256};
+
+			CombinedEncodingDistribution::Builder distBuilder;
+			distBuilder.add(LaplaceEncodingDistribution(encodeRange, combinedDist.first, combinedDist.second), 65534);
+			distBuilder.add(UniformEncodingDistribution(encodeRange), 1);
+
+			distBuilder.get().encode(_encoder, _v);
 		}
 	}
 
@@ -68,8 +75,13 @@ public:
 
 		if(combinedDist.second != 0)
 		{
-			LaplaceEncodingDistribution encodeDist(combinedDist.first, combinedDist.second);
-			return encodeDist.decode(_decoder);
+			std::pair<int, int> encodeRange{0, 256};
+
+			CombinedEncodingDistribution::Builder distBuilder;
+			distBuilder.add(LaplaceEncodingDistribution(encodeRange, combinedDist.first, combinedDist.second), 65534);
+			distBuilder.add(UniformEncodingDistribution(encodeRange), 1);
+
+			return distBuilder.get().decode(_decoder);
 		}
 		else
 			return combinedDist.first;

@@ -6,52 +6,68 @@
 #define ENCODINGDISTRIBUTION_HPP
 
 #include <cassert>
-#include <utility>
+#include <cmath>
+#include <algorithm>
 #include "ArithmeticEncoder.hpp"
 #include "ArithmeticDecoder.hpp"
 
 
-template <class TEncode>
 class EncodingDistribution
 {
 public:
-	typedef ArithmeticEncoder::Range Range;
-	typedef ArithmeticEncoder::DoubleRange DoubleRange;
+	typedef ArithmeticEncoder::Range          Range;
+	typedef ArithmeticEncoder::DoubleRange    DoubleRange;
 
-	void encode(ArithmeticEncoder& _encoder, TEncode _v)
-	{
-		std::pair<Range, DoubleRange> range = this->getRange(_v);
+	static const Range        RANGE_MAX = ArithmeticEncoder::RANGE_MAX;
+	static const DoubleRange  MIN_RANGE_SIZE = ArithmeticEncoder::MIN_RANGE_SIZE;
 
-		assert(this->getValue(range.first) == std::make_pair(_v, range));
-		assert(this->getValue(range.second - 1) == std::make_pair(_v, range));
+public:
+	~EncodingDistribution() {}
 
-		_encoder.encode(range);
+	void encode(ArithmeticEncoder& _encoder, int _v);
+	int decode(ArithmeticDecoder& _decoder);
 
-		this->update(_v);
-	}
-
-	TEncode decode(ArithmeticDecoder& _decoder)
-	{
-		auto fraction = _decoder.fraction();
-
-		std::pair<TEncode, std::pair<Range, DoubleRange>> v = this->getValue(fraction);
-
-		assert(fraction >= v.second.first &&
-			fraction < v.second.second);
-
-		_decoder.decode(v.second);
-
-		this->update(v.first);
-
-		return v.first;
-	}
-
-	virtual std::pair<Range, DoubleRange> getRange(TEncode _v) const=0;
+	// Ranges should be ordered.
+	// For r = [ getRange(v) ), getValue(r) = v
+	virtual std::pair<Range, Range> getRange(int _v) const=0;
 	virtual std::pair<
-		TEncode,
-		std::pair<Range, DoubleRange>>    getValue(Range _v) const=0;
+		int,
+		std::pair<Range, Range>>    getValue(Range _v) const=0;
+	virtual void                    update(int _v) {};
 
-	virtual void update(TEncode _v) {};
+
+	template <class TContainer>
+	double encodeSize(const TContainer& _data, int _offset = 0)
+	{
+		double size = 0;
+
+		for(int i = 0; i < _data.size(); ++i)
+		{
+			int count = _data[i];
+
+			auto range = this->getRange(i + _offset);
+
+			double bitsPer = std::log2(ArithmeticEncoder::RANGE_MAX/static_cast<double>(range.second - range.first));
+
+			size += count*bitsPer;
+		}
+
+		return size;
+	}
+
+	template <class TContainer>
+	static double encodeSizeLimit(const TContainer& _data)
+	{
+		double size = 0;
+
+		int total = std::accumulate(_data.begin(), _data.end(), 0);
+
+		for(int count : _data)
+			if(count > 0)
+				size += count*std::log2(static_cast<double>(total)/count);
+
+		return size;
+	}
 };
 
 #endif // ENCODINGDISTRIBUTION_HPP
