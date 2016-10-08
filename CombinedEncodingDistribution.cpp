@@ -36,9 +36,21 @@ CombinedEncodingDistribution::getValue(Range _v) const
 		auto range = this->getRange(mid);
 
 		if(_v < range.first)
-			high = { mid-1, range.first-1 };
+		{
+			std::pair<int, Range> newHigh = { mid-1, range.first-1 };
+
+			assert(high != newHigh);
+
+			high = newHigh;
+		}
 		else if(_v >= range.second)
-			low = { mid+1, range.second };
+		{
+			std::pair<int, Range> newLow = { mid+1, range.second };
+
+			assert(low != newLow);
+
+			low = newLow;
+		}
 		else
 			return { mid, range };
 	}
